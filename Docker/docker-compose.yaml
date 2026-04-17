@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  smsc-dev:
+    build:
+      context: ./smsc-dev
+      dockerfile: Dockerfile
+      target: smsc-dev
+    container_name: smsc-dev
+    image: smsc-dev:latest
+
+    # Mount workspace volumes
+    volumes:
+      - ..:/workspace
+      - build-cache:/workspace/build
+      - ccache:/root/.ccache
+      - cmake-cache:/root/.cmake
+      - pkg-cache:/root/.local
+      - source-dev:/workspace/src
+
+    # Interactive terminal
+    stdin_open: true
+    tty: true
+
+    # Enable D-Bus communication if needed
+    environment:
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+
+    # Network configuration
+    networks:
+      - smc-network
+
+    # Run as user for development
+    user: "root"
+
+    # Default command
+    command: /bin/bash
+
+networks:
+  smc-network:
+    driver: bridge
+
+volumes:
+  build-cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./build-cache
+  ccache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./ccache
+  cmake-cache:
+    driver: local
+  pkg-cache:
+    driver: local
+  source-dev:
+    driver: local
