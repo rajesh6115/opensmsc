@@ -133,7 +133,65 @@
   # Should show at least one test passing
   ```
 
-### Phase G: VS Code Remote SSH
+### Phase G: D-Bus and Network Setup
+- [ ] D-Bus is installed in container:
+  ```bash
+  ssh developer@localhost -p 2222 'apt list --installed | grep dbus'
+  # Should show dbus package
+  ```
+
+- [ ] busctl is available for D-Bus introspection:
+  ```bash
+  ssh developer@localhost -p 2222 'which busctl'
+  # Should show /usr/bin/busctl
+  ```
+
+- [ ] sdbus-c++ library installed:
+  ```bash
+  ssh developer@localhost -p 2222 'apt list --installed | grep sdbus'
+  # Should show libsdbus-c++ package
+  ```
+
+- [ ] D-Bus services are queryable:
+  ```bash
+  ssh developer@localhost -p 2222 'busctl list'
+  # Should list available D-Bus services
+  ```
+
+- [ ] SMPP port 2775 is exposed in docker-compose.yml:
+  - [ ] File contains: `- "2775:2775"  # SMPP server port`
+
+- [ ] SMPP port 2776 (TLS future) is exposed in docker-compose.yml:
+  - [ ] File contains: `- "2776:2776"  # SMPP TLS port`
+
+### Phase H: Network Connectivity Testing
+- [ ] Can verify listening ports from inside container:
+  ```bash
+  ssh developer@localhost -p 2222 'netstat -tulpn | grep LISTEN'
+  # Should be able to run successfully
+  ```
+
+- [ ] SMPP port is accessible from host (when server runs):
+  ```bash
+  nc -zv localhost 2775
+  # Connection should succeed (once server is started)
+  ```
+
+- [ ] Can test port from another terminal while server runs:
+  ```bash
+  # Terminal 1: Start server
+  ssh developer@localhost -p 2222 '/workspace/build/smpp_server'
+  
+  # Terminal 2: Test connectivity
+  telnet localhost 2775
+  # Should connect (Ctrl+] to quit telnet)
+  ```
+
+- [ ] Docker volumes persist correctly:
+  - [ ] Build artifacts in `/workspace/build` persist
+  - [ ] D-Bus socket `/run/dbus` is accessible from container
+
+### Phase I: VS Code Remote SSH
 - [ ] C/C++ extension installed in VS Code
 - [ ] CMake Tools extension installed in VS Code
 - [ ] Can connect to remote host in VS Code:
@@ -151,7 +209,7 @@
   - [ ] Hover over a standard library function
   - [ ] Should show documentation/definition
 
-### Phase H: Documentation & Verification
+### Phase J: Documentation & Verification
 - [ ] `doc/development_environment.md` complete
 - [ ] This exit criteria document completed
 - [ ] Steps to run, build, and test are documented
@@ -236,13 +294,15 @@ These are out of scope for dev environment setup:
 
 | Step | Time | Notes |
 |------|------|-------|
-| Create Dockerfile.dev | 30 min | Install packages, configure SSH |
-| Create docker-compose.yml | 15 min | Container orchestration |
+| Create Dockerfile.dev | 30 min | Install packages, configure SSH, D-Bus, sdbus-c++ |
+| Create docker-compose.yml | 20 min | Container + ports (2222, 2775, 2776) + D-Bus volume |
 | Build Docker image | 15-30 min | Depends on internet/packages |
 | Configure VS Code SSH | 15 min | Extensions + config |
 | Verify build pipeline | 15 min | CMake + compilation test |
+| Test D-Bus setup | 10 min | busctl, sdbus-c++ verification |
+| Test SMPP ports | 10 min | Port binding, connectivity checks |
 | Document setup | 15 min | This checklist + troubleshooting |
-| **Total** | **1.5-2 hours** | One-time setup |
+| **Total** | **2-2.5 hours** | One-time setup |
 
 ---
 
@@ -254,8 +314,10 @@ These are out of scope for dev environment setup:
 - [ ] Phase D: Build Environment
 - [ ] Phase E: Compilation
 - [ ] Phase F: Testing Framework
-- [ ] Phase G: VS Code Remote SSH
-- [ ] Phase H: Documentation
+- [ ] Phase G: D-Bus and Network Setup
+- [ ] Phase H: Network Connectivity Testing
+- [ ] Phase I: VS Code Remote SSH
+- [ ] Phase J: Documentation
 - [ ] **[DEVELOPMENT ENVIRONMENT READY]**
 
 Next: Start Phase 1.1 (smppcxx integration into CMake)

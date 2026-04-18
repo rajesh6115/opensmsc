@@ -70,12 +70,24 @@ Create `Docker/smsc-dev/Dockerfile.dev` (for development) with:
 - sudo
 - vim / nano (optional, for in-container editing)
 
+# D-Bus and IPC
+- dbus (message bus system)
+- dbus-user-session (user session D-Bus)
+- libdbus-1-dev (D-Bus development headers)
+- sdbus-c++ (or libsdbus-c++-dev if available)
+- busctl (D-Bus introspection and testing tool)
+
 # Libraries for SMPP development
 - libssl-dev (if TLS needed later)
 - pkg-config (for finding libraries)
 
 # Testing
 - google-test library (libgtest-dev + cmake)
+
+# Debugging & Monitoring
+- net-tools (netstat, ifconfig)
+- curl (for HTTP testing, if needed)
+- tmux (optional, for multiple sessions)
 ```
 
 **SSH Configuration**:
@@ -84,9 +96,22 @@ Create `Docker/smsc-dev/Dockerfile.dev` (for development) with:
 - Generate host keys on startup
 - Expose port 22 (or custom port like 2222)
 
+**D-Bus Configuration**:
+- Install dbus and dbus-user-session
+- Mount `/run/dbus` from host for IPC communication
+- Enable D-Bus socket availability in container
+- Install sdbus-c++ library for C++ D-Bus bindings
+- Install busctl for debugging D-Bus services
+
+**Network Port Exposure**:
+- Expose SMPP server port 2775 (standard SMPP)
+- Expose SMPP TLS port 2776 (future use)
+- Map container ports to host for client connections
+
 **Project Setup**:
 - Copy/mount project source to `/workspace` or `/home/developer/workspace`
 - Pre-build smppcxx library dependencies if needed
+- Ensure build artifacts persist in Docker volume
 
 ### 3.2 Docker Compose Setup
 
@@ -100,16 +125,20 @@ Services:
       dockerfile: Docker/smsc-dev/Dockerfile.dev
     container_name: smsc-dev-container
     ports:
-      - "2222:22"        # SSH port mapping
+      - "2222:22"        # SSH port mapping (for remote access)
+      - "2775:2775"      # SMPP server port (standard SMPP port)
+      - "2776:2776"      # SMPP server port (TLS, future use)
     volumes:
       - ./:/workspace    # Mount project root
       - dev-build:/workspace/build  # Persist build artifacts
+      - /run/dbus:/run/dbus  # D-Bus socket for IPC
     environment:
       - DEVELOPER_USER=developer
       - DEVELOPER_PASSWORD=dev123  # Change to your preference
     command: /usr/sbin/sshd -D
     stdin_open: true
     tty: true
+    privileged: true  # Needed for D-Bus and system integration
 
 volumes:
   dev-build:
@@ -120,6 +149,63 @@ volumes:
 docker-compose -f docker-compose.dev.yml up -d      # Start container
 docker-compose -f docker-compose.dev.yml down        # Stop container
 docker-compose -f docker-compose.dev.yml logs -f     # View logs
+```
+
+### 3.3 D-Bus and sdbus-c++ Setup
+
+D-Bus is an IPC (Inter-Process Communication) system that allows communication between processes. This is useful for:
+- Testing SMPP server services
+- Monitoring and debugging
+- Future integration with other system components
+
+**In Dockerfile.dev**:
+```dockerfile
+# D-Bus and sdbus-c++
+RUN apt-get update && apt-get install -y \
+    dbus \
+    dbus-user-session \
+    libdbus-1-dev \
+    busctl \
+    net-tools
+
+# sdbus-c++ (C++ D-Bus bindings)
+# Option 1: From Ubuntu repos (if available)
+RUN apt-get install -y libsdbus-c++-dev
+
+# Option 2: Build from source (if not in repos)
+# RUN git clone https://github.com/Kistler-Group/sdbus-cpp.git /tmp/sdbus-cpp && \
+#     cd /tmp/sdbus-cpp && \
+#     mkdir build && cd build && \
+#     cmake .. && make && make install && \
+#     cd / && rm -rf /tmp/sdbus-cpp
+```
+
+**Port Exposure for SMPP Server**:
+The docker-compose.yml already maps:
+- `2775:2775` - SMPP port (client connections)
+- `2776:2776` - SMPP TLS port (future)
+
+This allows SMPP clients on your host to connect to:
+```
+localhost:2775   (from host machine)
+container:2775   (from other containers)
+```
+
+### 3.4 Testing the Network Setup
+
+Inside container, verify ports are open:
+```bash
+netstat -tulpn | grep LISTEN
+# Should show port 2775 and 2776 when server is running
+```
+
+From host machine, test connection to SMPP server:
+```bash
+telnet localhost 2775
+# Should connect (or show connection refused if server isn't running)
+
+nc -zv localhost 2775
+# Alternative port check
 ```
 
 ---
@@ -300,12 +386,44 @@ simple_smpp_server/
    ctest -V
    ```
 
-3. **Develop**:
+3. **Run and test SMPP server**:
+   ```bash
+   # Build the server
+   cd /workspace/build && cmake --build .
+   
+   # Start the server (inside container via SSH)
+   ssh developer@localhost -p 2222 '/workspace/build/smpp_server'
+   # Or run in VS Code terminal
+   
+   # In another terminal, verify server is listening
+   netstat -tulpn | grep 2775
+   ```
+
+4. **Test connectivity and ports** (from host or another container):
+   ```bash
+   # Test SMPP port is accessible from host
+   telnet localhost 2775
+   # Or
+   nc -zv localhost 2775
+   
+   # Query D-Bus services (if using D-Bus)
+   ssh developer@localhost -p 2222 'busctl list'
+   
+   # Monitor SMPP server via D-Bus (future)
+   ssh developer@localhost -p 2222 'busctl introspect com.example.smsc /com/example/smsc/Server'
+   ```
+
+5. **Develop**:
    - Edit code in VS Code (all changes reflected in container)
    - Rebuild and test iteratively
+   - Server runs in separate SSH session or in background
 
-4. **End work** (optional):
+6. **End work** (optional):
    ```bash
+   # Kill SMPP server
+   ssh developer@localhost -p 2222 'pkill -f smpp_server'
+   
+   # Stop container (or leave running)
    docker-compose -f docker-compose.dev.yml stop
    # Or leave running for next session
    ```
@@ -363,9 +481,66 @@ simple_smpp_server/
 - [ ] Build and test commands are documented
 - [ ] All setup decisions are recorded
 
+### D-Bus and Network Testing
+- [ ] D-Bus is installed in container: `apt list --installed | grep dbus`
+- [ ] busctl is available: `which busctl`
+- [ ] sdbus-c++ is installed: `apt list --installed | grep sdbus`
+- [ ] Can list D-Bus services: `busctl list`
+- [ ] SMPP port 2775 is exposed in docker-compose
+- [ ] SMPP port 2775 is accessible from host: `telnet localhost 2775` or `nc -zv localhost 2775`
+- [ ] Can verify listening ports from inside container: `netstat -tulpn` shows port 2775
+- [ ] Server can be started and stopped cleanly
+
 ---
 
-## 10. Troubleshooting
+## 10. D-Bus Integration & Testing
+
+### busctl Commands for Debugging
+
+Once SMPP server is running (and if it exposes D-Bus services):
+
+```bash
+# List all D-Bus services
+busctl list
+
+# Introspect a service (example)
+busctl introspect com.example.smsc /com/example/smsc/Server
+
+# Monitor D-Bus traffic
+busctl monitor com.example.smsc
+
+# Call a D-Bus method (example)
+busctl call com.example.smsc /com/example/smsc/Server \
+    com.example.smsc.Server GetStatus
+```
+
+### Network Port Verification
+
+```bash
+# From inside container - verify ports are listening
+netstat -tulpn | grep LISTEN
+
+# From host - test SMPP server connectivity
+telnet localhost 2775
+nc -zv localhost 2775
+ss -tulpn | grep 2775
+
+# If using SMPP client library, can test:
+# - Bind request/response
+# - Unbind request/response
+# - Keep-alive (ENQUIRE_LINK)
+```
+
+### Integration with Server Code
+
+In your server implementation (future Phase 1.2):
+- Use sdbus-c++ to expose D-Bus services for monitoring
+- Listen on port 2775 for SMPP client connections
+- Both can coexist - D-Bus for internal monitoring, SMPP for external clients
+
+---
+
+## 11. Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
@@ -374,6 +549,11 @@ simple_smpp_server/
 | smppcxx headers not found | Verify submodule is initialized: `git submodule update --init` |
 | gtest not found | Install in Dockerfile: `apt-get install libgtest-dev` |
 | VS Code can't find IntelliSense | Install C/C++ extension and restart VS Code |
+| SMPP port 2775 not accessible | Check docker-compose.yml port mapping; verify server is running: `netstat -tulpn` |
+| D-Bus services not found | Check dbus is installed: `apt list --installed \| grep dbus`; restart dbus-daemon |
+| busctl command not found | Install in Dockerfile: `apt-get install dbus` (includes busctl) |
+| sdbus-c++ headers not found | Install in Dockerfile: `apt-get install libsdbus-c++-dev` |
+| /run/dbus not available | Ensure volume mount in docker-compose: `- /run/dbus:/run/dbus` |
 
 ---
 
