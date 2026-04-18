@@ -5,31 +5,38 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# ── Standalone ASIO (header-only, no Boost) ─────────────────────────────────
-include(FetchContent)
-FetchContent_Declare(
-    asio
-    GIT_REPOSITORY https://github.com/chriskohlhoff/asio.git
-    GIT_TAG        asio-1-30-2
-    GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(asio)
+# ── Find packages using pkg-config ────────────────────────────────────────────
 
-# ASIO exposes its headers under <repo>/asio/include
+find_package(PkgConfig REQUIRED)
+
+# ASIO (standalone, header-only)
+# Install: apt install libasio-dev (Debian/Ubuntu)
+# Check for asio.hpp header (pkg-config not always available for libasio-dev)
+find_path(ASIO_INCLUDE_DIR asio.hpp
+    HINTS /usr/include /usr/local/include
+    DOC "ASIO header directory"
+)
+
+if(NOT ASIO_INCLUDE_DIR)
+    message(FATAL_ERROR "asio.hpp not found. Please install libasio-dev package.")
+endif()
+
+message(STATUS "Found ASIO headers at: ${ASIO_INCLUDE_DIR}")
+
+# sdbus-c++ (modern C++ D-Bus binding)
+# Install: apt install libsdbus-c++-dev (Debian/Ubuntu)
+# This is MANDATORY - build will fail if not found
+pkg_check_modules(SDBUS_CPP REQUIRED sdbus-c++)
+
+# ── Create interface library for ASIO ─────────────────────────────────────────
 add_library(asio_iface INTERFACE)
 target_include_directories(asio_iface INTERFACE
-    $<BUILD_INTERFACE:${asio_SOURCE_DIR}/asio/include>
+    ${ASIO_INCLUDE_DIR}
 )
 target_compile_definitions(asio_iface INTERFACE
     ASIO_STANDALONE          # No Boost dependency
     ASIO_NO_DEPRECATED
 )
-
-# ── sdbus-c++ (modern C++ binding over sd-bus / D-Bus) ──────────────────────
-# Install: apt install libsdbus-c++-dev   (Debian/Ubuntu)
-#          dnf install sdbus-cpp-devel     (Fedora/RHEL)
-# Or build from source: https://github.com/Kistler-Group/sdbus-cpp
-find_package(sdbus-c++ REQUIRED)
 
 # ── Sources ──────────────────────────────────────────────────────────────────
 set(SOURCES
@@ -45,14 +52,27 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     include
 )
 
+# Link libraries using pkg-config imported targets
 target_link_libraries(${PROJECT_NAME} PRIVATE
     asio_iface
-    sdbus-c++::sdbus-c++
+    ${SDBUS_CPP_LIBRARIES}
     pthread
 )
 
+# Add include directories from pkg-config
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${SDBUS_CPP_INCLUDE_DIRS}
+)
+
+# Add compile flags from pkg-config
 target_compile_options(${PROJECT_NAME} PRIVATE
+    ${SDBUS_CPP_CFLAGS}
     -Wall -Wextra -Wpedantic
+)
+
+# Add link flags from pkg-config
+target_link_options(${PROJECT_NAME} PRIVATE
+    ${SDBUS_CPP_LDFLAGS}
 )
 
 # ── Install ──────────────────────────────────────────────────────────────────
@@ -63,7 +83,12 @@ install(FILES systemd/SMPPAuthenticator@.service
         DESTINATION /etc/systemd/system)
 
 message(STATUS "")
+message(STATUS "  ═══════════════════════════════════════════════════════")
 message(STATUS "  simple_smpp_server ${PROJECT_VERSION}")
-message(STATUS "  ASIO             : ${asio_SOURCE_DIR}/asio/include")
-message(STATUS "  sdbus-c++        : ${sdbus-c++_VERSION}")
+message(STATUS "  ───────────────────────────────────────────────────────")
+message(STATUS "  ASIO (standalone) : ${ASIO_INCLUDE_DIR}")
+message(STATUS "  sdbus-c++ (D-Bus) : ${SDBUS_CPP_VERSION}")
+message(STATUS "  C++ Standard      : ${CMAKE_CXX_STANDARD}")
+message(STATUS "  Compiler          : ${CMAKE_CXX_COMPILER}")
+message(STATUS "  ═══════════════════════════════════════════════════════")
 message(STATUS "")

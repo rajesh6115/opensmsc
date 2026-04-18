@@ -19,8 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install dbus and dbus-c++ dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libasio-dev \
     libdbus-1-dev \
     libdbus-c++-dev \
+    libsdbus-c++-dev \
     dbus \
     && rm -rf /var/lib/apt/lists/*
 
@@ -37,10 +39,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     pkg-config \
     gdb \
     valgrind \
+    libasio-dev \
     libdbus-1-3 \
     libdbus-c++ \
     libdbus-1-dev \
     libdbus-c++-dev \
+    libsdbus-c++-dev \
     dbus \
     && rm -rf /var/lib/apt/lists/*
 

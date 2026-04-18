@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/workspace/SMPPServer/build_test",
+  "command": "/usr/bin/c++  -I/workspace/SMPPServer/include -std=gnu++17 -Wall -Wextra -Wpedantic -o CMakeFiles/smpp_test_build.dir/test_main.cpp.o -c /workspace/SMPPServer/build_test/test_main.cpp",
+  "file": "/workspace/SMPPServer/build_test/test_main.cpp",
+  "output": "CMakeFiles/smpp_test_build.dir/test_main.cpp.o"
+}
+]

@@ -1,0 +1,3 @@
+[submodule "external/smppcxx"]
+	path = external/smppcxx
+	url = https://github.com/rajesh6115/smppcxx.git

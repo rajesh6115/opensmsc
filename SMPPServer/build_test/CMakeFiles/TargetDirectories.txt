@@ -1,0 +1,3 @@
+/workspace/SMPPServer/build_test/CMakeFiles/smpp_test_build.dir
+/workspace/SMPPServer/build_test/CMakeFiles/edit_cache.dir
+/workspace/SMPPServer/build_test/CMakeFiles/rebuild_cache.dir
