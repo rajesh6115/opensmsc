@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  smsc-dev:
+    build:
+      context: .
+      dockerfile: Docker/smsc-dev/Dockerfile.dev
+      args:
+        DEVELOPER_USER: developer
+        DEVELOPER_UID: 5000
+
+    container_name: smsc-dev-container
+
+    # Port mappings
+    ports:
+      - "2222:22"      # SSH: localhost:2222 -> container:22
+      - "2775:2775"    # SMPP: localhost:2775 -> container:2775
+      - "2776:2776"    # SMPP TLS: localhost:2776 -> container:2776
+
+    # Volume mounts - minimal, only project source
+    volumes:
+      # Mount project root for live development (code access only)
+      - ./:/workspace
+
+    # Environment variables
+    environment:
+      - DEVELOPER_USER=developer
+      - DEVELOPER_PASSWORD=dev123
+
+    # Keep container running
+    stdin_open: true
+    tty: true
+
+    # Privileged mode for D-Bus and system integration
+    privileged: true
+
+    # Start SSH daemon
+    command: /usr/sbin/sshd -D
+
+    # Restart policy
+    restart: unless-stopped

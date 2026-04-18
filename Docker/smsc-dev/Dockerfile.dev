@@ -1,0 +1,123 @@
+# Development environment for SMSC (Simple SMPP Server)
+# Based on Ubuntu 24.04 LTS
+# Includes: GCC, CMake, D-Bus, sdbus-c++, Google Test, SSH, build tools
+
+FROM ubuntu:24.04
+
+# Set non-interactive mode
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update package lists
+RUN apt-get update && apt-get upgrade -y
+
+# Install build tools and compilers
+RUN apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    pkg-config \
+    wget \
+    curl \
+    make \
+    nano \
+    vim
+
+# Install C++ development headers
+RUN apt-get install -y \
+    libstdc++-14-dev \
+    libc6-dev
+
+# Install SSL/TLS libraries (for future SMPP TLS support)
+RUN apt-get install -y \
+    libssl-dev \
+    libcrypto++-dev
+
+# Install ASIO (networking library)
+RUN apt-get install -y \
+    libasio-dev
+
+# Install SSH server
+RUN apt-get install -y \
+    openssh-server \
+    openssh-client
+
+# Install D-Bus and sdbus-c++
+RUN apt-get install -y \
+    dbus \
+    dbus-user-session \
+    libdbus-1-dev
+
+# Install sdbus-c++ (C++ bindings for D-Bus)
+RUN apt-get install -y \
+    libsdbus-c++-dev
+
+# Install Google Test (gtest)
+RUN apt-get install -y \
+    libgtest-dev
+
+# Build and install Google Test libraries (CMake version)
+RUN cd /usr/src/gtest && \
+    cmake . && \
+    cmake --build . --target all && \
+    cp lib/*.a /usr/lib/
+
+# Install network tools for debugging
+RUN apt-get install -y \
+    net-tools \
+    telnet \
+    netcat-openbsd
+
+# Install tmux for multiple sessions (optional)
+RUN apt-get install -y \
+    tmux
+
+# Clean up APT cache
+RUN apt-get clean && apt-get autoclean && apt-get autoremove -y
+
+# Create non-root user for development
+ARG DEVELOPER_USER=developer
+ARG DEVELOPER_UID=5000
+RUN useradd -m -u ${DEVELOPER_UID} -s /bin/bash ${DEVELOPER_USER}
+
+# Configure sudoers for the developer user (NOPASSWD for convenience in dev environment)
+RUN echo "${DEVELOPER_USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Create SSH directory and set permissions
+RUN mkdir -p /home/${DEVELOPER_USER}/.ssh && \
+    chown -R ${DEVELOPER_USER}:${DEVELOPER_USER} /home/${DEVELOPER_USER}/.ssh && \
+    chmod 700 /home/${DEVELOPER_USER}/.ssh
+
+# Create SSH privilege separation directory
+RUN mkdir -p /run/sshd
+
+# Generate SSH host keys
+RUN ssh-keygen -A
+
+# Configure SSH server
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/X11Forwarding.*/X11Forwarding no/' /etc/ssh/sshd_config
+
+# Set developer password (in plain text for dev env - change as needed)
+RUN echo "${DEVELOPER_USER}:dev123" | chpasswd
+
+# Create workspace directory
+RUN mkdir -p /workspace && \
+    chown -R ${DEVELOPER_USER}:${DEVELOPER_USER} /workspace
+
+# Create build directory
+RUN mkdir -p /workspace/build && \
+    chown -R ${DEVELOPER_USER}:${DEVELOPER_USER} /workspace/build
+
+# Set working directory
+WORKDIR /workspace
+
+# Expose SSH port
+EXPOSE 22
+
+# Expose SMPP server ports
+EXPOSE 2775 2776
+
+# Default command: start SSH daemon
+CMD ["/usr/sbin/sshd", "-D"]
