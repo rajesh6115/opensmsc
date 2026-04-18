@@ -21,13 +21,16 @@ Build a **production-grade SMPP (Short Message Service Protocol) server** that c
 
 ## 2. High-Level Goals
 
-### Phase 1: MVP - SMPP Bind Support (Foundation)
-- **Goal**: Build a working SMPP server that can authenticate clients
+### Phase 1: MVP - Core Protocol Operations (Foundation)
+- **Goal**: Build a working SMPP server with essential operations for client lifecycle management
 - **Success Criteria**:
   - Server accepts SMPP TCP connections
-  - Handles BIND_TRANSMITTER, BIND_RECEIVER, BIND_TRANSCEIVER operations
+  - **BIND Operations**: BIND_TRANSMITTER, BIND_RECEIVER, BIND_TRANSCEIVER
+  - **UNBIND Operation**: Graceful client disconnect
+  - **ENQUIRE_LINK Operation**: Keep-alive/heartbeat mechanism
   - Properly validates bind credentials
-  - Responds with appropriate SMPP bind responses (success/failure)
+  - Responds with appropriate SMPP responses (success/failure)
+  - Connection state management and cleanup
   - Basic logging and error handling
 
 ### Phase 2: Message Operations (Future)
@@ -131,10 +134,17 @@ Each execution step should document:
 - **SMPP**: Simple Message Peer-to-Peer Protocol
 - **Versions**: We'll target SMPP v3.4 (most common)
 - **Core Operations for MVP**:
-  - `BIND_TRANSMITTER` (0x00000001) - client sends messages only
-  - `BIND_RECEIVER` (0x00000004) - client receives messages only
-  - `BIND_TRANSCEIVER` (0x00000009) - bidirectional
-  - Response: `BIND_TRANSMITTER_RESP`, `BIND_RECEIVER_RESP`, `BIND_TRANSCEIVER_RESP`
+  - **BIND Operations** (Authentication):
+    - `BIND_TRANSMITTER` (0x00000001) - client sends messages only
+    - `BIND_RECEIVER` (0x00000004) - client receives messages only
+    - `BIND_TRANSCEIVER` (0x00000009) - bidirectional
+    - Response: `BIND_TRANSMITTER_RESP`, `BIND_RECEIVER_RESP`, `BIND_TRANSCEIVER_RESP`
+  - **UNBIND Operation** (Graceful Disconnect):
+    - `UNBIND` (0x00000006) - client requests graceful connection close
+    - Response: `UNBIND_RESP` (0x80000006)
+  - **ENQUIRE_LINK Operation** (Keep-Alive/Heartbeat):
+    - `ENQUIRE_LINK` (0x0000000F) - connection health check
+    - Response: `ENQUIRE_LINK_RESP` (0x8000000F)
 
 ---
 
