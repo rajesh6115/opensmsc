@@ -88,10 +88,13 @@ void SmppHandler::handle_bind_receiver(
     }
 
     try {
-        LOG_INFO("SmppHandler", "BIND_RECEIVER attempting to parse PDU size={}", pdu_body.size());
+        LOG_INFO("SmppHandler", "BIND_RECEIVER PDU size={} bytes", pdu_body.size());
         if (pdu_body.size() >= 16) {
-            LOG_INFO("SmppHandler", "PDU header: len=0x{:02x}{:02x}{:02x}{:02x}",
-                     pdu_body[0], pdu_body[1], pdu_body[2], pdu_body[3]);
+            uint32_t len = ((uint32_t)pdu_body[0]<<24) | ((uint32_t)pdu_body[1]<<16) |
+                          ((uint32_t)pdu_body[2]<<8) | (uint32_t)pdu_body[3];
+            uint32_t seq = ((uint32_t)pdu_body[12]<<24) | ((uint32_t)pdu_body[13]<<16) |
+                          ((uint32_t)pdu_body[14]<<8) | (uint32_t)pdu_body[15];
+            LOG_INFO("SmppHandler", "PDU: length={} seq={}", len, seq);
         }
         Smpp::BindReceiver bind_req(pdu_body.data());
         LOG_INFO("SmppHandler", "BIND_RECEIVER PDU parsed successfully");
@@ -161,7 +164,9 @@ void SmppHandler::handle_bind_transmitter(
     }
 
     try {
+        LOG_INFO("SmppHandler", "BIND_TRANSMITTER parsing PDU size={}", pdu_body.size());
         Smpp::BindTransmitter bind_req(pdu_body.data());
+        LOG_INFO("SmppHandler", "BIND_TRANSMITTER PDU parsed");
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());
 
