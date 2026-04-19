@@ -4,7 +4,6 @@
 
 #include <asio.hpp>
 
-#include <csignal>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -17,15 +16,7 @@
 static constexpr uint16_t    DEFAULT_PORT       = 2775;
 static constexpr const char* DEFAULT_IP_CONFIG  = "/etc/simple_smpp_server/allowed_ips.conf";
 
-// ── Signal handling ───────────────────────────────────────────────────────────
-
-static asio::io_context* g_io_ctx = nullptr;
-
-static void on_signal(int sig)
-{
-    std::cout << "\n[INFO] main: received signal " << sig << " — stopping\n";
-    if (g_io_ctx) g_io_ctx->stop();
-}
+// ── Signal handling via ASIO (no globals) ────────────────────────────────────
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -67,11 +58,15 @@ int main(int argc, char* argv[])
         auto service_mgr  = std::make_shared<SmppServiceManager>();
 
         asio::io_context io_ctx;
-        g_io_ctx = &io_ctx;
 
-        // Graceful shutdown on Ctrl-C / SIGTERM
-        std::signal(SIGINT,  on_signal);
-        std::signal(SIGTERM, on_signal);
+        // Graceful shutdown on Ctrl-C / SIGTERM via ASIO signal_set
+        asio::signal_set signals(io_ctx, SIGINT, SIGTERM);
+        signals.async_wait([&io_ctx](const asio::error_code& ec, int sig) {
+            if (!ec) {
+                std::cout << "\n[INFO] main: received signal " << sig << " — stopping\n";
+                io_ctx.stop();
+            }
+        });
 
         TcpServer server(io_ctx, port, validator, service_mgr);
 

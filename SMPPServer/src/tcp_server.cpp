@@ -3,11 +3,23 @@
 #include "ip_validator.hpp"
 #include "session_id.hpp"
 #include "smpp_service_manager.hpp"
+#include "smpp_session.hpp"
+#include "smpp_handler.hpp"
 
 #include <asio.hpp>
 
+#include <cstring>
 #include <iostream>
+#include <memory>
 #include <string>
+#include <vector>
+
+namespace {
+    uint32_t ntoh32(const uint8_t* ptr) {
+        return ((uint32_t)ptr[0] << 24) | ((uint32_t)ptr[1] << 16) |
+               ((uint32_t)ptr[2] << 8) | ((uint32_t)ptr[3]);
+    }
+}
 
 // ── TcpServer ─────────────────────────────────────────────────────────────────
 
@@ -21,9 +33,15 @@ TcpServer::TcpServer(asio::io_context&                    io_ctx,
     , validator_(std::move(validator))
     , service_mgr_(std::move(service_mgr))
 {
-    // IPV6_V6ONLY = 0 → dual-stack: accept both IPv4 and IPv6 on one socket.
-    acceptor_.set_option(asio::ip::v6_only(false));
-
+    try {
+        asio::error_code ec;
+        acceptor_.set_option(asio::ip::v6_only(false), ec);
+        if (ec) {
+            std::cout << "[WARN] TcpServer: could not set IPv6-only option: " << ec.message() << "\n";
+        }
+    } catch (const std::exception& e) {
+        std::cout << "[WARN] TcpServer: exception setting IPv6-only option: " << e.what() << "\n";
+    }
     std::cout << "[INFO] TcpServer: listening on [::]:" << port << "\n";
     do_accept();
 }
@@ -37,24 +55,23 @@ uint16_t TcpServer::port() const
 
 void TcpServer::do_accept()
 {
-    acceptor_.async_accept(
-        [this](asio::error_code ec, asio::ip::tcp::socket socket)
-        {
-            if (ec) {
-                if (ec != asio::error::operation_aborted) {
-                    std::cerr << "[ERROR] TcpServer: accept error: " << ec.message() << "\n";
-                }
-            } else {
-                handle_connection(std::move(socket));
+    auto socket = std::make_shared<asio::ip::tcp::socket>(acceptor_.get_executor());
+    acceptor_.async_accept(*socket, [this, socket](const asio::error_code& ec) {
+        if (ec) {
+            if (ec != asio::error::operation_aborted) {
+                std::cerr << "[ERROR] TcpServer: accept error: " << ec.message() << "\n";
             }
-            do_accept();   // queue next accept immediately
-        });
+        } else {
+            handle_connection(socket);
+        }
+        do_accept();
+    });
 }
 
-void TcpServer::handle_connection(asio::ip::tcp::socket socket)
+void TcpServer::handle_connection(std::shared_ptr<asio::ip::tcp::socket> socket)
 {
     asio::error_code ec;
-    auto remote_ep  = socket.remote_endpoint(ec);
+    auto remote_ep = socket->remote_endpoint(ec);
     if (ec) {
         std::cerr << "[WARN] TcpServer: could not read remote endpoint: "
                   << ec.message() << "\n";
@@ -62,38 +79,104 @@ void TcpServer::handle_connection(asio::ip::tcp::socket socket)
     }
 
     const std::string client_ip = remote_ep.address().to_string();
-
     std::cout << "[INFO] TcpServer: connection from " << client_ip
               << ":" << remote_ep.port() << "\n";
 
-    // ── 1. Source-IP validation ───────────────────────────────────────────────
     if (!validator_->is_allowed(client_ip)) {
         std::cout << "[WARN] TcpServer: IP " << client_ip
                   << " is NOT in the whitelist — rejecting\n";
-        const std::string resp = "ERROR IP_NOT_ALLOWED\n";
-        asio::write(socket, asio::buffer(resp), ec);
-        return;   // socket destructs → connection closed
+        return;
     }
 
     std::cout << "[INFO] TcpServer: IP " << client_ip << " is allowed\n";
 
-    // ── 2. Generate session ID ───────────────────────────────────────────────
     const std::string session_id = generate_session_id();
     std::cout << "[INFO] TcpServer: session_id=" << session_id << "\n";
 
-    // ── 3. Start SMPPAuthenticator@<session_id>.service ──────────────────────
     if (!service_mgr_->start_authenticator(session_id, client_ip)) {
-        const std::string resp = "ERROR SERVICE_START_FAILED\n";
-        asio::write(socket, asio::buffer(resp), ec);
+        std::cout << "[WARN] TcpServer: service start failed\n";
         return;
     }
 
-    // ── 4. Acknowledge to the client ─────────────────────────────────────────
-    const std::string resp = "OK " + session_id + "\n";
-    asio::write(socket, asio::buffer(resp), ec);
+    auto session = std::make_shared<SmppSession>();
+    read_pdu_header(socket, session);
+}
+
+void TcpServer::read_pdu_header(std::shared_ptr<asio::ip::tcp::socket> socket,
+                                std::shared_ptr<SmppSession> session)
+{
+    auto header_buffer = std::make_shared<std::vector<uint8_t>>(16);
+
+    asio::async_read(*socket, asio::buffer(*header_buffer, 16),
+        [this, socket, session, header_buffer](const asio::error_code& ec,
+                                               std::size_t bytes) {
+            on_header_read(socket, session, ec, bytes, header_buffer);
+        });
+}
+
+void TcpServer::on_header_read(std::shared_ptr<asio::ip::tcp::socket> socket,
+                               std::shared_ptr<SmppSession> session,
+                               const asio::error_code& ec,
+                               std::size_t bytes_transferred,
+                               std::shared_ptr<std::vector<uint8_t>> header_buffer)
+{
     if (ec) {
-        std::cerr << "[WARN] TcpServer: write to " << client_ip
-                  << " failed: " << ec.message() << "\n";
+        if (ec != asio::error::eof) {
+            std::cerr << "[WARN] TcpServer: read header error: " << ec.message() << "\n";
+        }
+        socket->close();
+        return;
     }
-    // Socket goes out of scope here → connection closes cleanly.
+
+    if (bytes_transferred != 16) {
+        std::cerr << "[WARN] TcpServer: incomplete header read\n";
+        socket->close();
+        return;
+    }
+
+    uint32_t command_length = ntoh32(header_buffer->data());
+    if (command_length < 16) {
+        std::cerr << "[WARN] TcpServer: invalid command_length\n";
+        socket->close();
+        return;
+    }
+
+    uint32_t body_length = command_length - 16;
+    read_pdu_body(socket, session, header_buffer, body_length);
+}
+
+void TcpServer::read_pdu_body(std::shared_ptr<asio::ip::tcp::socket> socket,
+                              std::shared_ptr<SmppSession> session,
+                              std::shared_ptr<std::vector<uint8_t>> header_buffer,
+                              uint32_t body_length)
+{
+    auto body_buffer = std::make_shared<std::vector<uint8_t>>(body_length);
+
+    asio::async_read(*socket, asio::buffer(*body_buffer, body_length),
+        [this, socket, session, header_buffer, body_buffer](
+            const asio::error_code& ec, std::size_t bytes) {
+            on_body_read(socket, session, header_buffer, body_buffer, ec, bytes);
+        });
+}
+
+void TcpServer::on_body_read(std::shared_ptr<asio::ip::tcp::socket> socket,
+                             std::shared_ptr<SmppSession> session,
+                             std::shared_ptr<std::vector<uint8_t>> header_buffer,
+                             std::shared_ptr<std::vector<uint8_t>> body_buffer,
+                             const asio::error_code& ec,
+                             std::size_t bytes_transferred)
+{
+    if (ec) {
+        if (ec != asio::error::eof) {
+            std::cerr << "[WARN] TcpServer: read body error: " << ec.message() << "\n";
+        }
+        socket->close();
+        return;
+    }
+
+    SmppHandler::dispatch_pdu(*header_buffer, *body_buffer, *session, *socket);
+
+    if (socket->is_open()) {
+        read_pdu_header(socket, session);
+    }
 }

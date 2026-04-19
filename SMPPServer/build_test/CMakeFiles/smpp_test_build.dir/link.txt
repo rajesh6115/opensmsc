@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/smpp_test_build.dir/test_main.cpp.o -o smpp_test_build  -lpthread 

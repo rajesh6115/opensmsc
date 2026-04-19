@@ -39,17 +39,27 @@ target_compile_definitions(asio_iface INTERFACE
 )
 
 # ── Sources ──────────────────────────────────────────────────────────────────
+
+# Find all smppcxx source files
+file(GLOB SMPPCXX_SOURCES
+    ../external/smppcxx/src/*.cpp
+)
+
 set(SOURCES
     src/main.cpp
     src/tcp_server.cpp
     src/ip_validator.cpp
     src/smpp_service_manager.cpp
+    src/smpp_session.cpp
+    src/smpp_handler.cpp
+    ${SMPPCXX_SOURCES}
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     include
+    ../external/smppcxx/include
 )
 
 # Link libraries using pkg-config imported targets
