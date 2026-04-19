@@ -1,10 +1,11 @@
 #include "ip_validator.hpp"
 
+#include "logger.hpp"
+
 #include <arpa/inet.h>   // inet_pton
 
 #include <algorithm>
 #include <fstream>
-#include <iostream>
 #include <stdexcept>
 #include <string_view>
 
@@ -57,14 +58,12 @@ void IpValidator::load_config()
             std::string network_str = line.substr(0, slash);
             int prefix = std::stoi(line.substr(slash + 1));
             if (prefix < 0 || prefix > 32) {
-                std::cerr << "[WARN] IpValidator: invalid prefix length in: "
-                          << line << " — skipping\n";
+                LOG_WARN("IpValidator", "invalid prefix length in: {} — skipping", line);
                 continue;
             }
             uint32_t net{};
             if (!parse_ipv4(network_str, net)) {
-                std::cerr << "[WARN] IpValidator: invalid network address in: "
-                          << line << " — skipping\n";
+                LOG_WARN("IpValidator", "invalid network address in: {} — skipping", line);
                 continue;
             }
             uint32_t mask = (prefix == 0) ? 0u : (~uint32_t{0} << (32 - prefix));
@@ -75,9 +74,8 @@ void IpValidator::load_config()
         }
     }
 
-    std::cout << "[INFO] IpValidator: loaded " << exact_set_.size()
-              << " exact entries and " << cidrs_.size()
-              << " CIDR ranges from " << config_file_ << "\n";
+    LOG_INFO("IpValidator", "loaded {} exact entries and {} CIDR ranges from {}",
+             exact_set_.size(), cidrs_.size(), config_file_);
 }
 
 bool IpValidator::matches_cidr(uint32_t addr) const
@@ -104,6 +102,6 @@ bool IpValidator::is_allowed(const std::string& ip) const
 
 void IpValidator::reload()
 {
-    std::cout << "[INFO] IpValidator: reloading config\n";
+    LOG_INFO("IpValidator", "reloading config");
     load_config();
 }

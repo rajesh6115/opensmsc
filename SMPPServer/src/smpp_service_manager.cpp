@@ -1,6 +1,6 @@
 #include "smpp_service_manager.hpp"
 
-#include <iostream>
+#include "logger.hpp"
 #include <string>
 
 // ── SmppServiceManager ────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ struct SmppServiceManager::Impl
 SmppServiceManager::SmppServiceManager()
     : impl_{std::make_unique<Impl>()}
 {
-    std::cout << "[INFO] SmppServiceManager: initialized (Phase 1.1 MVP)\n";
+    LOG_INFO("SmppServiceManager", "initialized (Phase 1.1 MVP)");
 }
 
 SmppServiceManager::~SmppServiceManager() = default;
@@ -27,9 +27,8 @@ SmppServiceManager::~SmppServiceManager() = default;
 bool SmppServiceManager::start_authenticator(const std::string& session_id,
                                               const std::string& client_ip)
 {
-    std::cout << "[INFO] SmppServiceManager: authenticator start requested\n"
-              << "       session_id=" << session_id
-              << "  client_ip=" << client_ip << "\n";
+    LOG_INFO("SmppServiceManager", "authenticator start requested session_id={} client_ip={}",
+             session_id, client_ip);
     // Phase 1.1: Basic logging only
     // Phase 2+: Will integrate with systemd via D-Bus
     return true;
@@ -37,8 +36,7 @@ bool SmppServiceManager::start_authenticator(const std::string& session_id,
 
 bool SmppServiceManager::stop_authenticator(const std::string& session_id)
 {
-    std::cout << "[INFO] SmppServiceManager: authenticator stop requested\n"
-              << "       session_id=" << session_id << "\n";
+    LOG_INFO("SmppServiceManager", "authenticator stop requested session_id={}", session_id);
     // Phase 1.1: Basic logging only
     // Phase 2+: Will integrate with systemd via D-Bus
     return true;

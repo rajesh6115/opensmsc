@@ -55,6 +55,10 @@ RUN apt-get install -y \
 RUN apt-get install -y \
     libgtest-dev
 
+# Install spdlog (fast C++ logging)
+RUN apt-get install -y \
+    libspdlog-dev
+
 # Build and install Google Test libraries (CMake version)
 RUN cd /usr/src/gtest && \
     cmake . && \
@@ -126,6 +130,11 @@ RUN mkdir -p /workspace && \
 # Create build directory
 RUN mkdir -p /workspace/build && \
     chown -R ${DEVELOPER_USER}:${DEVELOPER_USER} /workspace/build
+
+# Create log directory for SMPP server
+RUN mkdir -p /var/log/simple_smpp_server && \
+    chown -R ${DEVELOPER_USER}:${DEVELOPER_USER} /var/log/simple_smpp_server && \
+    chmod 755 /var/log/simple_smpp_server
 
 # Create supervisord configuration directory
 RUN mkdir -p /etc/supervisor/conf.d && \

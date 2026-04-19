@@ -1,10 +1,12 @@
 #include "ip_validator.hpp"
+#include "logger.hpp"
 #include "smpp_service_manager.hpp"
 #include "tcp_server.hpp"
 
 #include <asio.hpp>
 
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -15,6 +17,8 @@
 
 static constexpr uint16_t    DEFAULT_PORT       = 2775;
 static constexpr const char* DEFAULT_IP_CONFIG  = "/etc/simple_smpp_server/allowed_ips.conf";
+static constexpr const char* DEFAULT_LOG_FILE   = "/var/log/simple_smpp_server/server.log";
+static constexpr const char* DEFAULT_LOG_LEVEL  = "info";
 
 // ── Signal handling via ASIO (no globals) ────────────────────────────────────
 
@@ -34,23 +38,46 @@ static void print_usage(const char* prog)
 int main(int argc, char* argv[])
 {
     // ── Parse arguments ───────────────────────────────────────────────────────
-    uint16_t    port      = DEFAULT_PORT;
-    std::string ip_config = DEFAULT_IP_CONFIG;
+    uint16_t    port         = DEFAULT_PORT;
+    std::string ip_config    = DEFAULT_IP_CONFIG;
+    std::string log_level_str = DEFAULT_LOG_LEVEL;
 
-    if (argc > 3) { print_usage(argv[0]); return EXIT_FAILURE; }
-    if (argc > 1) {
-        try { port = static_cast<uint16_t>(std::stoul(argv[1])); }
-        catch (...) {
-            std::cerr << "[ERROR] Invalid port: " << argv[1] << "\n";
+    // Check env variable first (lowest precedence)
+    if (const char* env = std::getenv("SMPP_LOG_LEVEL"); env != nullptr) {
+        log_level_str = env;
+    }
+
+    // Parse command-line arguments
+    for (int i = 1; i < argc; ++i) {
+        std::string arg(argv[i]);
+        if (arg.find("--log-level=") == 0) {
+            log_level_str = arg.substr(12);
+        } else if (arg == "--help" || arg == "-h") {
             print_usage(argv[0]);
-            return EXIT_FAILURE;
+            return EXIT_SUCCESS;
+        } else if (i == 1) {
+            // First positional arg is port
+            try { port = static_cast<uint16_t>(std::stoul(argv[i])); }
+            catch (...) {
+                fprintf(stderr, "[ERROR] Invalid port: %s\n", argv[i]);
+                print_usage(argv[0]);
+                return EXIT_FAILURE;
+            }
+        } else if (i == 2) {
+            // Second positional arg is ip_config
+            ip_config = argv[i];
         }
     }
-    if (argc > 2) ip_config = argv[2];
 
-    std::cout << "[INFO] simple_smpp_server starting\n"
-              << "[INFO]   port      : " << port      << "\n"
-              << "[INFO]   ip_config : " << ip_config << "\n";
+    // ── Initialize logging FIRST ────────────────────────────────────────────
+    auto log_level = logger::level_from_string(log_level_str);
+    logger::init(DEFAULT_LOG_FILE, log_level);
+
+    LOG_INFO("main", "simple_smpp_server starting");
+    LOG_INFO("main", "port      : {}", port);
+    LOG_INFO("main", "ip_config : {}", ip_config);
+    LOG_INFO("main", "log_level : {}", log_level_str);
+    LOG_INFO("main", "log_file  : {}", DEFAULT_LOG_FILE);
 
     // ── Bootstrap components ──────────────────────────────────────────────────
     try {
@@ -63,7 +90,7 @@ int main(int argc, char* argv[])
         asio::signal_set signals(io_ctx, SIGINT, SIGTERM);
         signals.async_wait([&io_ctx](const asio::error_code& ec, int sig) {
             if (!ec) {
-                std::cout << "\n[INFO] main: received signal " << sig << " — stopping\n";
+                LOG_INFO("main", "received signal {} — stopping", sig);
                 io_ctx.stop();
             }
         });
@@ -75,7 +102,7 @@ int main(int argc, char* argv[])
         const unsigned int n_threads =
             std::max(2u, std::thread::hardware_concurrency());
 
-        std::cout << "[INFO] io_context running on " << n_threads << " thread(s)\n";
+        LOG_INFO("main", "io_context running on {} thread(s)", n_threads);
 
         std::vector<std::thread> workers;
         workers.reserve(n_threads - 1);
@@ -87,10 +114,12 @@ int main(int argc, char* argv[])
         for (auto& t : workers) t.join();
 
     } catch (const std::exception& ex) {
-        std::cerr << "[FATAL] " << ex.what() << "\n";
+        LOG_FATAL("main", "{}", ex.what());
+        logger::shutdown();
         return EXIT_FAILURE;
     }
 
-    std::cout << "[INFO] simple_smpp_server stopped\n";
+    LOG_INFO("main", "simple_smpp_server stopped");
+    logger::shutdown();
     return EXIT_SUCCESS;
 }

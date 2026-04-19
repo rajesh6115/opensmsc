@@ -1,10 +1,10 @@
 #include "smpp_handler.hpp"
 
+#include "logger.hpp"
 #include "smpp_session.hpp"
 #include <smpp.hpp>
 
 #include <cstring>
-#include <iostream>
 #include <vector>
 
 namespace {
@@ -29,15 +29,14 @@ void SmppHandler::dispatch_pdu(
 {
     // Parse header
     if (pdu_header.size() < 16) {
-        std::cerr << "[ERROR] SmppHandler: invalid header length\n";
+        LOG_ERROR("SmppHandler", "invalid header length");
         return;
     }
 
     uint32_t command_id = ntoh32(pdu_header.data() + 4);
     uint32_t sequence_number = ntoh32(pdu_header.data() + 12);
 
-    std::cout << "[INFO] SmppHandler: received PDU command_id=0x" << std::hex
-              << command_id << std::dec << " seq=" << sequence_number << "\n";
+    LOG_INFO("SmppHandler", "received PDU command_id=0x{:08x} seq={}", command_id, sequence_number);
 
     switch (command_id) {
     case CMD_BIND_RECEIVER:
@@ -61,8 +60,7 @@ void SmppHandler::dispatch_pdu(
         break;
 
     default:
-        std::cout << "[WARN] SmppHandler: unknown command 0x" << std::hex
-                  << command_id << std::dec << "\n";
+        LOG_WARN("SmppHandler", "unknown command 0x{:08x}", command_id);
         break;
     }
 }
@@ -74,7 +72,7 @@ void SmppHandler::handle_bind_receiver(
     asio::ip::tcp::socket& socket)
 {
     if (session.is_bound()) {
-        std::cout << "[WARN] SmppHandler: already bound\n";
+        LOG_WARN("SmppHandler", "already bound");
         Smpp::BindReceiverResp error_resp;
         error_resp.command_status(0x00000005);  // ESME_RALYBND
         error_resp.sequence_number(sequence_number);
@@ -90,10 +88,10 @@ void SmppHandler::handle_bind_receiver(
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());
 
-        std::cout << "[INFO] SmppHandler: BIND_RECEIVER username=" << username << "\n";
+        LOG_INFO("SmppHandler", "BIND_RECEIVER username={}", username);
 
         if (!validate_credentials(username, password)) {
-            std::cout << "[WARN] SmppHandler: authentication failed\n";
+            LOG_WARN("SmppHandler", "authentication failed");
             Smpp::BindReceiverResp error_resp;
             error_resp.command_status(0x0000000E);  // ESME_RINVPASWD
             error_resp.sequence_number(sequence_number);
@@ -115,15 +113,15 @@ void SmppHandler::handle_bind_receiver(
         std::vector<uint8_t> resp_buf(bind_resp.encode(),
                                        bind_resp.encode() + bind_resp.command_length());
 
-        std::cout << "[INFO] SmppHandler: sending BIND_RECEIVER_RESP\n";
+        LOG_INFO("SmppHandler", "sending BIND_RECEIVER_RESP");
         asio::error_code ec;
         asio::write(socket, asio::buffer(resp_buf), ec);
         if (ec) {
-            std::cerr << "[ERROR] SmppHandler: write failed: " << ec.message() << "\n";
+            LOG_ERROR("SmppHandler", "write failed: {}", ec.message());
         }
 
     } catch (const std::exception& ex) {
-        std::cerr << "[ERROR] SmppHandler: exception in BIND_RECEIVER: " << ex.what() << "\n";
+        LOG_ERROR("SmppHandler", "exception in BIND_RECEIVER: {}", ex.what());
         Smpp::BindReceiverResp error_resp;
         error_resp.command_status(0x0000000E);  // ESME_RINVPASWD
         error_resp.sequence_number(sequence_number);
@@ -141,7 +139,7 @@ void SmppHandler::handle_bind_transmitter(
     asio::ip::tcp::socket& socket)
 {
     if (session.is_bound()) {
-        std::cout << "[WARN] SmppHandler: already bound\n";
+        LOG_WARN("SmppHandler", "already bound");
         Smpp::BindTransmitterResp error_resp;
         error_resp.command_status(0x00000005);  // ESME_RALYBND
         error_resp.sequence_number(sequence_number);
@@ -157,10 +155,10 @@ void SmppHandler::handle_bind_transmitter(
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());
 
-        std::cout << "[INFO] SmppHandler: BIND_TRANSMITTER username=" << username << "\n";
+        LOG_INFO("SmppHandler", "BIND_TRANSMITTER username={}", username);
 
         if (!validate_credentials(username, password)) {
-            std::cout << "[WARN] SmppHandler: authentication failed\n";
+            LOG_WARN("SmppHandler", "authentication failed");
             Smpp::BindTransmitterResp error_resp;
             error_resp.command_status(0x0000000E);  // ESME_RINVPASWD
             error_resp.sequence_number(sequence_number);
@@ -182,15 +180,15 @@ void SmppHandler::handle_bind_transmitter(
         std::vector<uint8_t> resp_buf(bind_resp.encode(),
                                        bind_resp.encode() + bind_resp.command_length());
 
-        std::cout << "[INFO] SmppHandler: sending BIND_TRANSMITTER_RESP\n";
+        LOG_INFO("SmppHandler", "sending BIND_TRANSMITTER_RESP");
         asio::error_code ec;
         asio::write(socket, asio::buffer(resp_buf), ec);
         if (ec) {
-            std::cerr << "[ERROR] SmppHandler: write failed: " << ec.message() << "\n";
+            LOG_ERROR("SmppHandler", "write failed: {}", ec.message());
         }
 
     } catch (const std::exception& ex) {
-        std::cerr << "[ERROR] SmppHandler: exception in BIND_TRANSMITTER: " << ex.what() << "\n";
+        LOG_ERROR("SmppHandler", "exception in BIND_TRANSMITTER: {}", ex.what());
         Smpp::BindTransmitterResp error_resp;
         error_resp.command_status(0x0000000E);  // ESME_RINVPASWD
         error_resp.sequence_number(sequence_number);
@@ -208,7 +206,7 @@ void SmppHandler::handle_bind_transceiver(
     asio::ip::tcp::socket& socket)
 {
     if (session.is_bound()) {
-        std::cout << "[WARN] SmppHandler: already bound\n";
+        LOG_WARN("SmppHandler", "already bound");
         Smpp::BindTransceiverResp error_resp;
         error_resp.command_status(0x00000005);  // ESME_RALYBND
         error_resp.sequence_number(sequence_number);
@@ -224,10 +222,10 @@ void SmppHandler::handle_bind_transceiver(
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());
 
-        std::cout << "[INFO] SmppHandler: BIND_TRANSCEIVER username=" << username << "\n";
+        LOG_INFO("SmppHandler", "BIND_TRANSCEIVER username={}", username);
 
         if (!validate_credentials(username, password)) {
-            std::cout << "[WARN] SmppHandler: authentication failed\n";
+            LOG_WARN("SmppHandler", "authentication failed");
             Smpp::BindTransceiverResp error_resp;
             error_resp.command_status(0x0000000E);  // ESME_RINVPASWD
             error_resp.sequence_number(sequence_number);
@@ -249,15 +247,15 @@ void SmppHandler::handle_bind_transceiver(
         std::vector<uint8_t> resp_buf(bind_resp.encode(),
                                        bind_resp.encode() + bind_resp.command_length());
 
-        std::cout << "[INFO] SmppHandler: sending BIND_TRANSCEIVER_RESP\n";
+        LOG_INFO("SmppHandler", "sending BIND_TRANSCEIVER_RESP");
         asio::error_code ec;
         asio::write(socket, asio::buffer(resp_buf), ec);
         if (ec) {
-            std::cerr << "[ERROR] SmppHandler: write failed: " << ec.message() << "\n";
+            LOG_ERROR("SmppHandler", "write failed: {}", ec.message());
         }
 
     } catch (const std::exception& ex) {
-        std::cerr << "[ERROR] SmppHandler: exception in BIND_TRANSCEIVER: " << ex.what() << "\n";
+        LOG_ERROR("SmppHandler", "exception in BIND_TRANSCEIVER: {}", ex.what());
         Smpp::BindTransceiverResp error_resp;
         error_resp.command_status(0x0000000E);  // ESME_RINVPASWD
         error_resp.sequence_number(sequence_number);
@@ -274,7 +272,7 @@ void SmppHandler::handle_unbind(
     asio::ip::tcp::socket& socket)
 {
     if (!session.is_bound()) {
-        std::cout << "[WARN] SmppHandler: UNBIND but not bound\n";
+        LOG_WARN("SmppHandler", "UNBIND but not bound");
         Smpp::UnbindResp error_resp;
         error_resp.command_status(0x0000000D);  // ESME_RBINDFAIL (not bound);
         error_resp.sequence_number(sequence_number);
@@ -285,7 +283,7 @@ void SmppHandler::handle_unbind(
         return;
     }
 
-    std::cout << "[INFO] SmppHandler: UNBIND\n";
+    LOG_INFO("SmppHandler", "UNBIND");
 
     Smpp::UnbindResp unbind_resp;
     unbind_resp.command_status(0x00000000);  // ESME_ROK
@@ -294,7 +292,7 @@ void SmppHandler::handle_unbind(
     std::vector<uint8_t> resp_buf(unbind_resp.encode(),
                                    unbind_resp.encode() + unbind_resp.command_length());
 
-    std::cout << "[INFO] SmppHandler: sending UNBIND_RESP and closing connection\n";
+    LOG_INFO("SmppHandler", "sending UNBIND_RESP and closing connection");
     asio::error_code ec;
     asio::write(socket, asio::buffer(resp_buf), ec);
 
@@ -308,7 +306,7 @@ void SmppHandler::handle_enquire_link(
     asio::ip::tcp::socket& socket)
 {
     if (!session.is_bound()) {
-        std::cout << "[WARN] SmppHandler: ENQUIRE_LINK but not bound\n";
+        LOG_WARN("SmppHandler", "ENQUIRE_LINK but not bound");
         Smpp::EnquireLinkResp error_resp;
         error_resp.command_status(0x0000000D);  // ESME_RBINDFAIL (not bound);
         error_resp.sequence_number(sequence_number);
@@ -319,7 +317,7 @@ void SmppHandler::handle_enquire_link(
         return;
     }
 
-    std::cout << "[INFO] SmppHandler: ENQUIRE_LINK keep-alive\n";
+    LOG_INFO("SmppHandler", "ENQUIRE_LINK keep-alive");
 
     Smpp::EnquireLinkResp enquire_resp;
     enquire_resp.command_status(0x00000000);  // ESME_ROK
@@ -328,11 +326,11 @@ void SmppHandler::handle_enquire_link(
     std::vector<uint8_t> resp_buf(enquire_resp.encode(),
                                    enquire_resp.encode() + enquire_resp.command_length());
 
-    std::cout << "[INFO] SmppHandler: sending ENQUIRE_LINK_RESP\n";
+    LOG_INFO("SmppHandler", "sending ENQUIRE_LINK_RESP");
     asio::error_code ec;
     asio::write(socket, asio::buffer(resp_buf), ec);
     if (ec) {
-        std::cerr << "[ERROR] SmppHandler: write failed: " << ec.message() << "\n";
+        LOG_ERROR("SmppHandler", "write failed: {}", ec.message());
     }
 }
 

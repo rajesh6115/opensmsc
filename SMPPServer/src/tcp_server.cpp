@@ -1,6 +1,7 @@
 #include "tcp_server.hpp"
 
 #include "ip_validator.hpp"
+#include "logger.hpp"
 #include "session_id.hpp"
 #include "smpp_service_manager.hpp"
 #include "smpp_session.hpp"
@@ -9,7 +10,6 @@
 #include <asio.hpp>
 
 #include <cstring>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -37,12 +37,12 @@ TcpServer::TcpServer(asio::io_context&                    io_ctx,
         asio::error_code ec;
         acceptor_.set_option(asio::ip::v6_only(false), ec);
         if (ec) {
-            std::cout << "[WARN] TcpServer: could not set IPv6-only option: " << ec.message() << "\n";
+            LOG_WARN("TcpServer", "could not set IPv6-only option: {}", ec.message());
         }
     } catch (const std::exception& e) {
-        std::cout << "[WARN] TcpServer: exception setting IPv6-only option: " << e.what() << "\n";
+        LOG_WARN("TcpServer", "exception setting IPv6-only option: {}", e.what());
     }
-    std::cout << "[INFO] TcpServer: listening on [::]:" << port << "\n";
+    LOG_INFO("TcpServer", "listening on [::]:{}",  port);
     do_accept();
 }
 
@@ -59,7 +59,7 @@ void TcpServer::do_accept()
     acceptor_.async_accept(*socket, [this, socket](const asio::error_code& ec) {
         if (ec) {
             if (ec != asio::error::operation_aborted) {
-                std::cerr << "[ERROR] TcpServer: accept error: " << ec.message() << "\n";
+                LOG_ERROR("TcpServer", "accept error: {}", ec.message());
             }
         } else {
             handle_connection(socket);
@@ -73,28 +73,25 @@ void TcpServer::handle_connection(std::shared_ptr<asio::ip::tcp::socket> socket)
     asio::error_code ec;
     auto remote_ep = socket->remote_endpoint(ec);
     if (ec) {
-        std::cerr << "[WARN] TcpServer: could not read remote endpoint: "
-                  << ec.message() << "\n";
+        LOG_WARN("TcpServer", "could not read remote endpoint: {}", ec.message());
         return;
     }
 
     const std::string client_ip = remote_ep.address().to_string();
-    std::cout << "[INFO] TcpServer: connection from " << client_ip
-              << ":" << remote_ep.port() << "\n";
+    LOG_INFO("TcpServer", "connection from {}:{}", client_ip, remote_ep.port());
 
     if (!validator_->is_allowed(client_ip)) {
-        std::cout << "[WARN] TcpServer: IP " << client_ip
-                  << " is NOT in the whitelist — rejecting\n";
+        LOG_WARN("TcpServer", "IP {} is NOT in the whitelist — rejecting", client_ip);
         return;
     }
 
-    std::cout << "[INFO] TcpServer: IP " << client_ip << " is allowed\n";
+    LOG_INFO("TcpServer", "IP {} is allowed", client_ip);
 
     const std::string session_id = generate_session_id();
-    std::cout << "[INFO] TcpServer: session_id=" << session_id << "\n";
+    LOG_INFO("TcpServer", "session_id={}", session_id);
 
     if (!service_mgr_->start_authenticator(session_id, client_ip)) {
-        std::cout << "[WARN] TcpServer: service start failed\n";
+        LOG_WARN("TcpServer", "service start failed");
         return;
     }
 
@@ -122,21 +119,21 @@ void TcpServer::on_header_read(std::shared_ptr<asio::ip::tcp::socket> socket,
 {
     if (ec) {
         if (ec != asio::error::eof) {
-            std::cerr << "[WARN] TcpServer: read header error: " << ec.message() << "\n";
+            LOG_WARN("TcpServer", "read header error: {}", ec.message());
         }
         socket->close();
         return;
     }
 
     if (bytes_transferred != 16) {
-        std::cerr << "[WARN] TcpServer: incomplete header read\n";
+        LOG_WARN("TcpServer", "incomplete header read");
         socket->close();
         return;
     }
 
     uint32_t command_length = ntoh32(header_buffer->data());
     if (command_length < 16) {
-        std::cerr << "[WARN] TcpServer: invalid command_length\n";
+        LOG_WARN("TcpServer", "invalid command_length");
         socket->close();
         return;
     }
@@ -168,7 +165,7 @@ void TcpServer::on_body_read(std::shared_ptr<asio::ip::tcp::socket> socket,
 {
     if (ec) {
         if (ec != asio::error::eof) {
-            std::cerr << "[WARN] TcpServer: read body error: " << ec.message() << "\n";
+            LOG_WARN("TcpServer", "read body error: {}", ec.message());
         }
         socket->close();
         return;
