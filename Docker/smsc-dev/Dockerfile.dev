@@ -67,6 +67,10 @@ RUN apt-get install -y \
     telnet \
     netcat-openbsd
 
+# Install supervisord for process management
+RUN apt-get install -y \
+    supervisor
+
 # Install tmux for multiple sessions (optional)
 RUN apt-get install -y \
     tmux
@@ -90,8 +94,32 @@ RUN mkdir -p /home/${DEVELOPER_USER}/.ssh && \
 # Create SSH privilege separation directory
 RUN mkdir -p /run/sshd
 
+# Create D-Bus system bus directories and configuration
+RUN mkdir -p /run/dbus && \
+    chmod 755 /run/dbus && \
+    mkdir -p /var/run/dbus && \
+    chmod 755 /var/run/dbus
+
 # Generate SSH host keys
 RUN ssh-keygen -A
+
+# Initialize D-Bus system bus
+RUN dbus-uuidgen --ensure
+
+# Create minimal D-Bus system configuration
+RUN mkdir -p /etc/dbus-1 && \
+    printf '%s\n' \
+    '<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"' \
+    ' "http://dbus.freedesktop.org/doc/dbus-daemon.1.dtd">' \
+    '<busconfig>' \
+    '  <type>system</type>' \
+    '  <listen>unix:path=/var/run/dbus/system_bus_socket</listen>' \
+    '  <policy context="default">' \
+    '    <allow send_destination="*" eavesdrop="true"/>' \
+    '    <allow receive_sender="*" eavesdrop="true"/>' \
+    '    <allow user="*"/>' \
+    '  </policy>' \
+    '</busconfig>' > /etc/dbus-1/system.conf
 
 # Configure SSH server
 RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
@@ -110,6 +138,13 @@ RUN mkdir -p /workspace && \
 RUN mkdir -p /workspace/build && \
     chown -R ${DEVELOPER_USER}:${DEVELOPER_USER} /workspace/build
 
+# Create supervisord configuration directory
+RUN mkdir -p /etc/supervisor/conf.d && \
+    mkdir -p /var/log/supervisor
+
+# Copy supervisord configuration
+COPY Docker/smsc-dev/supervisord.conf /etc/supervisor/supervisord.conf
+
 # Set working directory
 WORKDIR /workspace
 
@@ -119,5 +154,5 @@ EXPOSE 22
 # Expose SMPP server ports
 EXPOSE 2775 2776
 
-# Default command: start SSH daemon
-CMD ["/usr/sbin/sshd", "-D"]
+# Default command: start supervisord (manages SSH and D-Bus)
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]

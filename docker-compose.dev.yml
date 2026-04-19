@@ -34,8 +34,5 @@ services:
     # Privileged mode for D-Bus and system integration
     privileged: true
 
-    # Start SSH daemon
-    command: /usr/sbin/sshd -D
-
     # Restart policy
     restart: unless-stopped
