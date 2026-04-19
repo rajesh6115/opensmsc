@@ -1,9 +1,21 @@
 cmake_minimum_required(VERSION 3.16)
-project(simple_smpp_server VERSION 1.0.0 LANGUAGES CXX)
+project(simple_smpp_server
+    VERSION 0.1.0
+    DESCRIPTION "SMPP Server - Process-per-client microservices"
+    HOMEPAGE_URL "https://github.com/rajesh6115/opensmsc"
+    LANGUAGES CXX
+)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# ── Generate config.h from config.h.in ───────────────────────────────────────
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/config/config.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/config/config.h"
+    @ONLY
+)
 
 # ── Find packages using pkg-config ────────────────────────────────────────────
 
@@ -87,6 +99,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     include
+    "${CMAKE_CURRENT_BINARY_DIR}/config"
     ../external/smppcxx/include
     ${SPDLOG_INCLUDE_DIR}
 )

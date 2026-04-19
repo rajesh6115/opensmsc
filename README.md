@@ -1,6 +1,24 @@
 # Simple SMPP Server - Microservices Architecture
 
+**Version**: 0.1.0 - Pre-Release (Architecture Design Phase)  
+**Status**: 🟡 In Development - Architecture documented, implementation not started
+
 > A production-grade SMSC (Short Message Service Center) built as a collection of independent microservices that communicate via D-Bus, appearing as a single unified SMSP gateway to external clients.
+
+---
+
+## 📌 Versioning Policy
+
+This project follows **Semantic Versioning** (SemVer):
+
+| Version | Status | Description |
+|---------|--------|-------------|
+| **0.1.0 - 0.1.x** | Pre-Release | Architecture design, no implementation yet. Only patch bumps (0.1.1, 0.1.2, etc.) |
+| **1.0.0+** | Stable MVP | Minimum viable product working. Core BIND/UNBIND/ENQUIRE_LINK functional. |
+| **Minor bumps** | After 1.0.0 | New features added (e.g., SUBMIT_SM, DELIVER_SM) |
+| **Major bumps** | Breaking changes | API/architecture changes that break compatibility |
+
+**Current Phase**: 0.1.0 - Architecture designed, waiting implementation to begin
 
 ---
 
@@ -689,6 +707,8 @@ Services register on D-Bus:
 - **[CURRENT_STATUS.md](doc/CURRENT_STATUS.md)** - Current implementation status and blockers
 - **[BUILD_AND_TEST_PLAN.md](doc/BUILD_AND_TEST_PLAN.md)** - Detailed build and test instructions
 - **[DBUS_INTERFACES.md](doc/DBUS_INTERFACES.md)** - D-Bus interface specifications and usage examples
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
+- **[VERSIONING.md](doc/VERSIONING.md)** - CMake-based versioning system (config.h.in)
 - **[diagrams/](doc/diagrams/)** - PlantUML sequence diagrams (connection flow, authentication, keep-alive)
 - **[SmppServer/](doc/SmppServer/)** - SMPP protocol reference and handler documentation
 
