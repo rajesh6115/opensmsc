@@ -88,7 +88,10 @@ void SmppHandler::handle_bind_receiver(
     }
 
     try {
-        LOG_INFO("SmppHandler", "BIND_RECEIVER PDU size={} bytes", pdu_body.size());
+        if (pdu_body.size() > 0) {
+            LOG_INFO("SmppHandler", "BIND_RECEIVER PDU size={} bytes, first byte=0x{:02x}",
+                     pdu_body.size(), pdu_body[0]);
+        }
         Smpp::BindReceiver bind_req(pdu_body.data());
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());

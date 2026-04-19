@@ -79,6 +79,7 @@ set(SOURCES
     src/smpp_service_manager.cpp
     src/smpp_session.cpp
     src/smpp_handler.cpp
+    src/smpp_pdu_framer.cpp
     ${SMPPCXX_SOURCES}
 )
 
