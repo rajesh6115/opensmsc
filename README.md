@@ -258,7 +258,43 @@ Detailed sequence diagrams showing how services communicate:
 Shows the complete TCP handshake, IP validation, process spawning, and socket handoff via D-Bus.
 
 ```plantuml
-!include ./doc/diagrams/connection_establishment.puml
+@startuml Connection Establishment Flow
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam backgroundColor #FEFEFE
+
+participant "Client" as client
+participant "SMPPServer" as server
+participant "SmppClientHandler" as handler
+
+autonumber
+
+== TCP Three-Way Handshake ==
+client -> server: TCP SYN
+server -> client: TCP SYN-ACK
+client -> server: TCP ACK
+
+== Connection Validation & Handoff ==
+server -> server: [accept connection]\n[validate IP against whitelist]
+server -> server: [spawn handler]\nSmppClientHandler 54321
+
+handler -> handler: [startup with port 54321]
+
+== Socket Claim via D-Bus ==
+handler -> server: D-Bus: ClaimSocket(54321)
+note over server: [find socket for :54321]
+note over server: [prepare socket FD transfer]
+server -> handler: D-Bus: return socket_fd
+
+server -> server: [close socket locally]
+
+handler -> handler: [take ownership of socket]
+handler -> handler: [ready to handle client]
+
+== Direct Communication ==
+note over client, handler: Data flows directly\nClient ↔ SmppClientHandler
+
+@enduml
 ```
 
 **Key Steps**:
