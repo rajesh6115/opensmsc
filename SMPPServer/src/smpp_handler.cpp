@@ -88,11 +88,13 @@ void SmppHandler::handle_bind_receiver(
     }
 
     try {
-        if (pdu_body.size() > 0) {
-            LOG_INFO("SmppHandler", "BIND_RECEIVER PDU size={} bytes, first byte=0x{:02x}",
-                     pdu_body.size(), pdu_body[0]);
+        LOG_INFO("SmppHandler", "BIND_RECEIVER attempting to parse PDU size={}", pdu_body.size());
+        if (pdu_body.size() >= 16) {
+            LOG_INFO("SmppHandler", "PDU header: len=0x{:02x}{:02x}{:02x}{:02x}",
+                     pdu_body[0], pdu_body[1], pdu_body[2], pdu_body[3]);
         }
         Smpp::BindReceiver bind_req(pdu_body.data());
+        LOG_INFO("SmppHandler", "BIND_RECEIVER PDU parsed successfully");
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());
 

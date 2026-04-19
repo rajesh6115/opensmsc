@@ -39,9 +39,16 @@ def test_bind_transmitter(host='127.0.0.1', port=2775):
     try:
         # Connect
         print(f"\n[1] Connecting to {host}:{port}...")
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(5)
-        sock.connect((host, port))
+        # Try IPv4 first, fall back to IPv6 if needed
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            sock.connect((host, port))
+        except (socket.error, OSError) as e:
+            print(f"    IPv4 failed: {e}, trying IPv6-mapped address...")
+            sock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            sock.connect(('::ffff:127.0.0.1', port, 0, 0))
         print("    [OK] Connected")
 
         # Send BIND_TRANSMITTER
