@@ -106,20 +106,9 @@ RUN ssh-keygen -A
 # Initialize D-Bus system bus
 RUN dbus-uuidgen --ensure
 
-# Create minimal D-Bus system configuration
-RUN mkdir -p /etc/dbus-1 && \
-    printf '%s\n' \
-    '<!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"' \
-    ' "http://dbus.freedesktop.org/doc/dbus-daemon.1.dtd">' \
-    '<busconfig>' \
-    '  <type>system</type>' \
-    '  <listen>unix:path=/var/run/dbus/system_bus_socket</listen>' \
-    '  <policy context="default">' \
-    '    <allow send_destination="*" eavesdrop="true"/>' \
-    '    <allow receive_sender="*" eavesdrop="true"/>' \
-    '    <allow user="*"/>' \
-    '  </policy>' \
-    '</busconfig>' > /etc/dbus-1/system.conf
+# Copy D-Bus system configuration
+COPY Docker/smsc-dev/system.conf /etc/dbus-1/system.conf
+RUN chmod 644 /etc/dbus-1/system.conf
 
 # Configure SSH server
 RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
