@@ -38,17 +38,21 @@ void SmppHandler::dispatch_pdu(
 
     LOG_INFO("SmppHandler", "received PDU command_id=0x{:08x} seq={}", command_id, sequence_number);
 
+    // Combine full PDU (header + body) for smppcxx constructors
+    std::vector<uint8_t> full_pdu(pdu_header);
+    full_pdu.insert(full_pdu.end(), pdu_body.begin(), pdu_body.end());
+
     switch (command_id) {
     case CMD_BIND_RECEIVER:
-        handle_bind_receiver(pdu_body, sequence_number, session, socket);
+        handle_bind_receiver(full_pdu, sequence_number, session, socket);
         break;
 
     case CMD_BIND_TRANSMITTER:
-        handle_bind_transmitter(pdu_body, sequence_number, session, socket);
+        handle_bind_transmitter(full_pdu, sequence_number, session, socket);
         break;
 
     case CMD_BIND_TRANSCEIVER:
-        handle_bind_transceiver(pdu_body, sequence_number, session, socket);
+        handle_bind_transceiver(full_pdu, sequence_number, session, socket);
         break;
 
     case CMD_UNBIND:
@@ -84,6 +88,7 @@ void SmppHandler::handle_bind_receiver(
     }
 
     try {
+        LOG_INFO("SmppHandler", "BIND_RECEIVER PDU size={} bytes", pdu_body.size());
         Smpp::BindReceiver bind_req(pdu_body.data());
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());
