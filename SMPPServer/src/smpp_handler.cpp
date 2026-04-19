@@ -22,37 +22,31 @@ namespace {
 }
 
 void SmppHandler::dispatch_pdu(
-    const std::vector<uint8_t>& pdu_header,
-    const std::vector<uint8_t>& pdu_body,
+    const std::vector<uint8_t>& full_pdu,
     SmppSession& session,
     asio::ip::tcp::socket& socket)
 {
-    // Parse header
-    if (pdu_header.size() < 16) {
-        LOG_ERROR("SmppHandler", "invalid header length");
+    if (full_pdu.size() < 16) {
+        LOG_ERROR("SmppHandler", "invalid PDU length");
         return;
     }
 
-    uint32_t command_id = ntoh32(pdu_header.data() + 4);
-    uint32_t sequence_number = ntoh32(pdu_header.data() + 12);
+    uint32_t command_id = ntoh32(full_pdu.data() + 4);
+    uint32_t sequence_number = ntoh32(full_pdu.data() + 12);
 
-    LOG_INFO("SmppHandler", "received PDU command_id=0x{:08x} seq={}", command_id, sequence_number);
-
-    // Combine full PDU (header + body) for smppcxx constructors
-    std::vector<uint8_t> full_pdu(pdu_header);
-    full_pdu.insert(full_pdu.end(), pdu_body.begin(), pdu_body.end());
+    LOG_INFO("SmppHandler", "received PDU command_id=0x{:08x} seq={} size={}", command_id, sequence_number, full_pdu.size());
 
     switch (command_id) {
     case CMD_BIND_RECEIVER:
-        handle_bind_receiver(full_pdu, sequence_number, session, socket);
+        handle_bind_receiver(full_pdu.data(), full_pdu.size(), sequence_number, session, socket);
         break;
 
     case CMD_BIND_TRANSMITTER:
-        handle_bind_transmitter(full_pdu, sequence_number, session, socket);
+        handle_bind_transmitter(full_pdu.data(), full_pdu.size(), sequence_number, session, socket);
         break;
 
     case CMD_BIND_TRANSCEIVER:
-        handle_bind_transceiver(full_pdu, sequence_number, session, socket);
+        handle_bind_transceiver(full_pdu.data(), full_pdu.size(), sequence_number, session, socket);
         break;
 
     case CMD_UNBIND:
@@ -70,7 +64,8 @@ void SmppHandler::dispatch_pdu(
 }
 
 void SmppHandler::handle_bind_receiver(
-    const std::vector<uint8_t>& pdu_body,
+    const uint8_t* body_data,
+    size_t body_len,
     uint32_t sequence_number,
     SmppSession& session,
     asio::ip::tcp::socket& socket)
@@ -88,15 +83,8 @@ void SmppHandler::handle_bind_receiver(
     }
 
     try {
-        LOG_INFO("SmppHandler", "BIND_RECEIVER PDU size={} bytes", pdu_body.size());
-        if (pdu_body.size() >= 16) {
-            uint32_t len = ((uint32_t)pdu_body[0]<<24) | ((uint32_t)pdu_body[1]<<16) |
-                          ((uint32_t)pdu_body[2]<<8) | (uint32_t)pdu_body[3];
-            uint32_t seq = ((uint32_t)pdu_body[12]<<24) | ((uint32_t)pdu_body[13]<<16) |
-                          ((uint32_t)pdu_body[14]<<8) | (uint32_t)pdu_body[15];
-            LOG_INFO("SmppHandler", "PDU: length={} seq={}", len, seq);
-        }
-        Smpp::BindReceiver bind_req(pdu_body.data());
+        LOG_WARN("SmppHandler", "Attempting to parse BIND_RECEIVER with body_len={}", body_len);
+        Smpp::BindReceiver bind_req(body_data);
         LOG_INFO("SmppHandler", "BIND_RECEIVER PDU parsed successfully");
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());
@@ -146,7 +134,8 @@ void SmppHandler::handle_bind_receiver(
 }
 
 void SmppHandler::handle_bind_transmitter(
-    const std::vector<uint8_t>& pdu_body,
+    const uint8_t* body_data,
+    size_t body_len,
     uint32_t sequence_number,
     SmppSession& session,
     asio::ip::tcp::socket& socket)
@@ -164,8 +153,8 @@ void SmppHandler::handle_bind_transmitter(
     }
 
     try {
-        LOG_INFO("SmppHandler", "BIND_TRANSMITTER parsing PDU size={}", pdu_body.size());
-        Smpp::BindTransmitter bind_req(pdu_body.data());
+        LOG_INFO("SmppHandler", "BIND_TRANSMITTER parsing PDU body_len={}", body_len);
+        Smpp::BindTransmitter bind_req(body_data);
         LOG_INFO("SmppHandler", "BIND_TRANSMITTER PDU parsed");
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());
@@ -215,7 +204,8 @@ void SmppHandler::handle_bind_transmitter(
 }
 
 void SmppHandler::handle_bind_transceiver(
-    const std::vector<uint8_t>& pdu_body,
+    const uint8_t* body_data,
+    size_t body_len,
     uint32_t sequence_number,
     SmppSession& session,
     asio::ip::tcp::socket& socket)
@@ -233,7 +223,8 @@ void SmppHandler::handle_bind_transceiver(
     }
 
     try {
-        Smpp::BindTransceiver bind_req(pdu_body.data());
+        Smpp::BindTransceiver bind_req(body_data);
+        LOG_INFO("SmppHandler", "BIND_TRANSCEIVER PDU parsed");
         std::string username = std::string(bind_req.system_id());
         std::string password = std::string(bind_req.password());
 

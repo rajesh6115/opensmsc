@@ -1,0 +1,40 @@
+@startuml BIND_TRANSMITTER Authentication Flow
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam backgroundColor #FEFEFE
+
+participant "SMPP Client" as client
+participant "SmppClientHandler" as handler
+participant "Authenticator\n(D-Bus Service)" as auth
+participant "spdlog\n(Logging Library)" as logger
+
+autonumber
+
+== Client BIND Request ==
+client -> handler: SMPP: BIND_TRANSMITTER PDU\n(TCP data stream)
+
+== PDU Parsing ==
+handler -> handler: [parse SMPP PDU]
+handler -> handler: [extract credentials]\nusername: "test"\npassword: "test123"
+
+== Authentication via D-Bus ==
+handler -> auth: D-Bus: Authenticate("test", "test123")
+auth -> auth: [load credential store]
+auth -> auth: [hash & validate password]
+auth -> handler: return (authenticated, error_code, message)
+
+alt Authentication Success
+    handler -> handler: [create session]
+    handler -> handler: [set state: BOUND_TX]
+else Authentication Failed
+    handler -> handler: [keep session UNBOUND]
+end
+
+== Logging ==
+handler -> logger: spdlog: INFO "BIND_TRANSMITTER\nuser=test, result=success"
+
+== Response ==
+handler -> handler: [build BIND_TRANSMITTER_RESP]
+handler -> client: SMPP: BIND_TRANSMITTER_RESP\n(TCP response)
+
+@enduml

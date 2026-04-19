@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-Bus Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/com/opensmsc/SMPPAuthenticator">
+  <interface name="com.opensmsc.SMPPAuthenticator">
+
+    <!-- Authenticate Method -->
+    <!--
+      Authenticate SMPP client credentials
+
+      Input:
+        username (s): SMPP system_id / username
+        password (s): SMPP password
+
+      Output:
+        authenticated (b): True if credentials are valid, False otherwise
+        error_code (u): 0 on success, error code otherwise
+        message (s): Human-readable response message
+
+      Error Codes:
+        0 = Success
+        1 = Invalid username
+        2 = Invalid password
+        3 = Account disabled
+        4 = Authentication service unavailable
+        5 = Internal error
+    -->
+    <method name="Authenticate">
+      <arg type="s" direction="in" name="username">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="SMPP username/system_id"/>
+      </arg>
+      <arg type="s" direction="in" name="password">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="SMPP password"/>
+      </arg>
+      <arg type="b" direction="out" name="authenticated">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="True if authentication succeeded"/>
+      </arg>
+      <arg type="u" direction="out" name="error_code">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Error code (0=success)"/>
+      </arg>
+      <arg type="s" direction="out" name="message">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Human-readable error message"/>
+      </arg>
+    </method>
+
+    <!-- ValidateUsername Method -->
+    <!--
+      Check if a username exists in the credential store
+
+      Input:
+        username (s): Username to validate
+
+      Output:
+        exists (b): True if username exists in store
+    -->
+    <method name="ValidateUsername">
+      <arg type="s" direction="in" name="username">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Username to validate"/>
+      </arg>
+      <arg type="b" direction="out" name="exists">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="True if username exists"/>
+      </arg>
+    </method>
+
+    <!-- GetAccountInfo Method -->
+    <!--
+      Get account information (if authorized)
+
+      Input:
+        username (s): Username
+
+      Output:
+        account_id (s): Internal account ID
+        status (s): Account status (active, disabled, locked)
+        account_type (s): Account type (transmitter, receiver, transceiver)
+    -->
+    <method name="GetAccountInfo">
+      <arg type="s" direction="in" name="username">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Username to query"/>
+      </arg>
+      <arg type="s" direction="out" name="account_id">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Account ID"/>
+      </arg>
+      <arg type="s" direction="out" name="status">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Account status"/>
+      </arg>
+      <arg type="s" direction="out" name="account_type">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Account type (transmitter/receiver/transceiver)"/>
+      </arg>
+    </method>
+
+    <!-- ReloadCredentials Method -->
+    <!--
+      Reload credentials from configuration file
+
+      Output:
+        success (b): True if reload succeeded
+        message (s): Status message
+    -->
+    <method name="ReloadCredentials">
+      <arg type="b" direction="out" name="success">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="True if reload succeeded"/>
+      </arg>
+      <arg type="s" direction="out" name="message">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Status message"/>
+      </arg>
+    </method>
+
+    <!-- AuthenticationAttempt Signal -->
+    <!--
+      Emitted when an authentication attempt is made
+
+      Signals:
+        username (s): Username attempted
+        success (b): True if authentication succeeded
+        ip_address (s): IP address of the attempt
+        timestamp (t): Timestamp of attempt (microseconds since epoch)
+    -->
+    <signal name="AuthenticationAttempt">
+      <arg type="s" name="username">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Username attempted"/>
+      </arg>
+      <arg type="b" name="success">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="True if authentication succeeded"/>
+      </arg>
+      <arg type="s" name="ip_address">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="IP address of the attempt"/>
+      </arg>
+      <arg type="t" name="timestamp">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Timestamp (microseconds since epoch)"/>
+      </arg>
+    </signal>
+
+    <!-- CredentialsReloaded Signal -->
+    <!--
+      Emitted when credentials are reloaded
+
+      Signals:
+        count (u): Number of credentials loaded
+        message (s): Status message
+    -->
+    <signal name="CredentialsReloaded">
+      <arg type="u" name="count">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Number of credentials loaded"/>
+      </arg>
+      <arg type="s" name="message">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Status message"/>
+      </arg>
+    </signal>
+
+    <!-- Properties -->
+
+    <!-- Status Property (read-only) -->
+    <property name="Status" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Service status: initializing, ready, error"/>
+    </property>
+
+    <!-- CredentialCount Property (read-only) -->
+    <property name="CredentialCount" type="u" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Number of loaded credentials"/>
+    </property>
+
+    <!-- LastReload Property (read-only) -->
+    <property name="LastReload" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Timestamp of last credential reload (microseconds since epoch)"/>
+    </property>
+
+    <!-- ConfigPath Property (read-only) -->
+    <property name="ConfigPath" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Path to credentials configuration file"/>
+    </property>
+
+  </interface>
+
+  <!-- Standard D-Bus Introspectable Interface -->
+  <interface name="org.freedesktop.DBus.Introspectable">
+    <method name="Introspect">
+      <arg name="xml_data" type="s" direction="out"/>
+    </method>
+  </interface>
+
+  <!-- Standard D-Bus Properties Interface -->
+  <interface name="org.freedesktop.DBus.Properties">
+    <method name="Get">
+      <arg name="interface_name" type="s" direction="in"/>
+      <arg name="property_name" type="s" direction="in"/>
+      <arg name="value" type="v" direction="out"/>
+    </method>
+    <method name="GetAll">
+      <arg name="interface_name" type="s" direction="in"/>
+      <arg name="properties" type="a{sv}" direction="out"/>
+    </method>
+    <method name="Set">
+      <arg name="interface_name" type="s" direction="in"/>
+      <arg name="property_name" type="s" direction="in"/>
+      <arg name="value" type="v" direction="in"/>
+    </method>
+    <signal name="PropertiesChanged">
+      <arg type="s" name="interface_name"/>
+      <arg type="a{sv}" name="changed_properties"/>
+      <arg type="as" name="invalidated_properties"/>
+    </signal>
+  </interface>
+
+</node>

@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-Bus Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/com/opensmsc/SMPPServer">
+  <interface name="com.opensmsc.SMPPServer">
+
+    <!-- ClaimSocket Method -->
+    <!--
+      Called by SmppClientHandler to claim ownership of a connected socket
+
+      Input:
+        client_port (u): Ephemeral port number of the client connection
+                        (used to identify which socket to transfer)
+
+      Output:
+        socket_fd (h): File descriptor of the connected socket
+                      (transferred to calling process)
+        success (b): True if socket was found and transferred, False otherwise
+
+      Error Conditions:
+        - com.opensmsc.SMPPServer.SocketNotFound: No socket for the given port
+        - com.opensmsc.SMPPServer.TransferFailed: Socket transfer failed
+        - com.opensmsc.SMPPServer.InvalidPort: Port number is invalid
+    -->
+    <method name="ClaimSocket">
+      <arg type="u" direction="in" name="client_port">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Ephemeral port number identifying the client connection"/>
+      </arg>
+      <arg type="h" direction="out" name="socket_fd">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="File descriptor of the connected socket"/>
+      </arg>
+      <arg type="b" direction="out" name="success">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="True if socket was successfully claimed"/>
+      </arg>
+    </method>
+
+    <!-- GetConnectionCount Method -->
+    <!--
+      Get total number of active client connections
+
+      Output:
+        count (u): Number of active connections
+    -->
+    <method name="GetConnectionCount">
+      <arg type="u" direction="out" name="count">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Number of active client connections"/>
+      </arg>
+    </method>
+
+    <!-- GetConnections Method -->
+    <!--
+      Get list of all active connections with their details
+
+      Output:
+        connections (a(ssu)): Array of connection info
+          - client_ip (s): Client IP address (IPv4 or IPv6)
+          - client_port (u): Client ephemeral port number
+          - state (u): Connection state (0=pending, 1=claimed, 2=disconnecting)
+    -->
+    <method name="GetConnections">
+      <arg type="a(ssu)" direction="out" name="connections">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Array of (client_ip, client_port, state) tuples"/>
+      </arg>
+    </method>
+
+    <!-- Shutdown Method -->
+    <!--
+      Gracefully shutdown the SMPP Server
+
+      Output:
+        success (b): True if shutdown initiated successfully
+    -->
+    <method name="Shutdown">
+      <arg type="b" direction="out" name="success">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="True if shutdown was initiated"/>
+      </arg>
+    </method>
+
+    <!-- ConnectionCreated Signal -->
+    <!--
+      Emitted when a new client connection is accepted
+
+      Signals:
+        client_ip (s): IP address of the connected client
+        client_port (u): Ephemeral port number of the connection
+        timestamp (t): Timestamp of connection (microseconds since epoch)
+    -->
+    <signal name="ConnectionCreated">
+      <arg type="s" name="client_ip">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Client IP address"/>
+      </arg>
+      <arg type="u" name="client_port">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Client ephemeral port"/>
+      </arg>
+      <arg type="t" name="timestamp">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Connection timestamp (microseconds since epoch)"/>
+      </arg>
+    </signal>
+
+    <!-- ConnectionClaimed Signal -->
+    <!--
+      Emitted when SmppClientHandler claims a socket
+
+      Signals:
+        client_port (u): Port number of claimed connection
+        pid (u): Process ID of SmppClientHandler that claimed it
+    -->
+    <signal name="ConnectionClaimed">
+      <arg type="u" name="client_port">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Port of claimed connection"/>
+      </arg>
+      <arg type="u" name="handler_pid">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="PID of SmppClientHandler process"/>
+      </arg>
+    </signal>
+
+    <!-- ConnectionDropped Signal -->
+    <!--
+      Emitted when a client connection is dropped or closed
+
+      Signals:
+        client_port (u): Port number of dropped connection
+        reason (s): Reason for drop (e.g., "ip_rejected", "claimed", "timeout", "error")
+    -->
+    <signal name="ConnectionDropped">
+      <arg type="u" name="client_port">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Port of dropped connection"/>
+      </arg>
+      <arg type="s" name="reason">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Reason connection was dropped"/>
+      </arg>
+    </signal>
+
+    <!-- Properties -->
+
+    <!-- Port Property (read-only) -->
+    <property name="Port" type="u" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="TCP port number SMPPServer is listening on"/>
+    </property>
+
+    <!-- Status Property (read-only) -->
+    <property name="Status" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Server status: starting, running, stopping, stopped"/>
+    </property>
+
+    <!-- MaxConnections Property (read-only) -->
+    <property name="MaxConnections" type="u" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Maximum allowed concurrent connections"/>
+    </property>
+
+    <!-- Uptime Property (read-only) -->
+    <property name="Uptime" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Server uptime in seconds"/>
+    </property>
+
+  </interface>
+
+  <!-- Standard D-Bus Introspectable Interface -->
+  <interface name="org.freedesktop.DBus.Introspectable">
+    <method name="Introspect">
+      <arg name="xml_data" type="s" direction="out"/>
+    </method>
+  </interface>
+
+  <!-- Standard D-Bus Properties Interface -->
+  <interface name="org.freedesktop.DBus.Properties">
+    <method name="Get">
+      <arg name="interface_name" type="s" direction="in"/>
+      <arg name="property_name" type="s" direction="in"/>
+      <arg name="value" type="v" direction="out"/>
+    </method>
+    <method name="GetAll">
+      <arg name="interface_name" type="s" direction="in"/>
+      <arg name="properties" type="a{sv}" direction="out"/>
+    </method>
+    <method name="Set">
+      <arg name="interface_name" type="s" direction="in"/>
+      <arg name="property_name" type="s" direction="in"/>
+      <arg name="value" type="v" direction="in"/>
+    </method>
+    <signal name="PropertiesChanged">
+      <arg type="s" name="interface_name"/>
+      <arg type="a{sv}" name="changed_properties"/>
+      <arg type="as" name="invalidated_properties"/>
+    </signal>
+  </interface>
+
+</node>

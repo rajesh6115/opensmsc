@@ -171,7 +171,10 @@ void TcpServer::on_body_read(std::shared_ptr<asio::ip::tcp::socket> socket,
         return;
     }
 
-    SmppHandler::dispatch_pdu(*header_buffer, *body_buffer, *session, *socket);
+    std::vector<uint8_t> full_pdu(*header_buffer);
+    full_pdu.insert(full_pdu.end(), body_buffer->begin(), body_buffer->end());
+
+    SmppHandler::dispatch_pdu(full_pdu, *session, *socket);
 
     if (socket->is_open()) {
         read_pdu_header(socket, session);

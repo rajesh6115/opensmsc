@@ -11,26 +11,28 @@ class SmppHandler
 {
 public:
     static void dispatch_pdu(
-        const std::vector<uint8_t>& pdu_header,
-        const std::vector<uint8_t>& pdu_body,
+        const std::vector<uint8_t>& full_pdu,
         SmppSession& session,
         asio::ip::tcp::socket& socket);
 
 private:
     static void handle_bind_transmitter(
-        const std::vector<uint8_t>& pdu_body,
+        const uint8_t* body_data,
+        size_t body_len,
         uint32_t sequence_number,
         SmppSession& session,
         asio::ip::tcp::socket& socket);
 
     static void handle_bind_receiver(
-        const std::vector<uint8_t>& pdu_body,
+        const uint8_t* body_data,
+        size_t body_len,
         uint32_t sequence_number,
         SmppSession& session,
         asio::ip::tcp::socket& socket);
 
     static void handle_bind_transceiver(
-        const std::vector<uint8_t>& pdu_body,
+        const uint8_t* body_data,
+        size_t body_len,
         uint32_t sequence_number,
         SmppSession& session,
         asio::ip::tcp::socket& socket);

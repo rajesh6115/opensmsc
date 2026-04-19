@@ -1,0 +1,6 @@
+[D-Bus Service]
+Name=com.opensmsc.SMPPAuthenticator
+Exec=/usr/local/bin/smpp_authenticator
+User=developer
+Type=simple
+SystemdService=smpp_authenticator.service

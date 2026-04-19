@@ -1,0 +1,6 @@
+[D-Bus Service]
+Name=com.opensmsc.SMPPServer
+Exec=/usr/local/bin/simple_smpp_server
+User=developer
+Type=simple
+SystemdService=simple_smpp_server.service

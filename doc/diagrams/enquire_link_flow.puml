@@ -1,0 +1,33 @@
+@startuml ENQUIRE_LINK Keep-Alive Flow
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam backgroundColor #FEFEFE
+
+participant "SMPP Client" as client
+participant "SmppClientHandler" as handler
+participant "spdlog\n(Logging Library)" as logger
+
+autonumber
+
+== Client Keep-Alive Request ==
+client -> handler: SMPP: ENQUIRE_LINK PDU
+
+== Immediate Processing ==
+handler -> handler: [parse ENQUIRE_LINK]
+handler -> handler: [check session state]
+
+alt Session is BOUND
+    handler -> handler: [validate sequence number]
+    handler -> handler: [prepare response]
+else Session is UNBOUND
+    handler -> handler: [send error response]
+end
+
+== Logging ==
+handler -> logger: spdlog: DEBUG "ENQUIRE_LINK\nfrom client, sequence=X"
+
+== Response ==
+handler -> handler: [build ENQUIRE_LINK_RESP]
+handler -> client: SMPP: ENQUIRE_LINK_RESP
+
+@enduml
