@@ -258,7 +258,7 @@ Detailed sequence diagrams showing how services communicate:
 Shows the complete TCP handshake, IP validation, process spawning, and socket handoff via D-Bus.
 
 ```plantuml
-!include ./diagrams/connection_establishment.puml
+!include ./doc/diagrams/connection_establishment.puml
 ```
 
 **Key Steps**:
@@ -277,7 +277,7 @@ Shows the complete TCP handshake, IP validation, process spawning, and socket ha
 Shows BIND request handling with credential validation.
 
 ```plantuml
-!include ./diagrams/bind_transmitter_flow.puml
+!include ./doc/diagrams/bind_transmitter_flow.puml
 ```
 
 **Key Steps**:
@@ -296,7 +296,7 @@ Shows BIND request handling with credential validation.
 Shows keep-alive message handling for connection health checks.
 
 ```plantuml
-!include ./diagrams/enquire_link_flow.puml
+!include ./doc/diagrams/enquire_link_flow.puml
 ```
 
 **Key Steps**:
