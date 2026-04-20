@@ -17,12 +17,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install dbus and dbus-c++ dependencies
+# Install dbus, asio, spdlog and other dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libasio-dev \
     libdbus-1-dev \
     libdbus-c++-dev \
     libsdbus-c++-dev \
+    libspdlog-dev \
+    libfmt-dev \
     dbus \
     && rm -rf /var/lib/apt/lists/*
 
@@ -45,6 +47,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libdbus-1-dev \
     libdbus-c++-dev \
     libsdbus-c++-dev \
+    libspdlog-dev \
+    libfmt-dev \
     dbus \
     && rm -rf /var/lib/apt/lists/*
 
@@ -65,9 +69,12 @@ LABEL description="C++ Development Environment with CMake and dbus-c++"
 LABEL version="1.0"
 
 # Add useful build aliases
-RUN echo 'alias build="mkdir -p build && cd build && cmake .. && make"' >> /root/.bashrc && \
-    echo 'alias rebuild="cd build && make clean && make"' >> /root/.bashrc && \
-    echo 'alias cmake-clean="rm -rf build"' >> /root/.bashrc
+RUN echo 'alias build="mkdir -p build && cd build && cmake .. && make -j$(nproc)"' >> /root/.bashrc && \
+    echo 'alias rebuild="cd build && make clean && make -j$(nproc)"' >> /root/.bashrc && \
+    echo 'alias cmake-clean="rm -rf build"' >> /root/.bashrc && \
+    echo 'alias build-server="cd build && cmake .. && make simple_smpp_server -j$(nproc)"' >> /root/.bashrc && \
+    echo 'alias build-handler="cd build && cmake .. && make smpp_client_handler -j$(nproc)"' >> /root/.bashrc && \
+    echo 'alias build-all="mkdir -p build && cd build && cmake .. && make -j$(nproc) && echo Build Complete: simple_smpp_server and smpp_client_handler"' >> /root/.bashrc
 
 # Expose common ports if needed
 # EXPOSE 5000

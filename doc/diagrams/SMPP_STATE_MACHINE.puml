@@ -1,0 +1,168 @@
+@startuml SMPP_ClientHandler_State_Machine
+
+title SMPP Client Handler - State Machine Diagram
+
+!define TERMINAL_COLOR #FFB6C6
+!define TRANSITION_COLOR #87CEEB
+!define ERROR_COLOR #FF6B6B
+
+scale 1400 width
+
+' Define states
+state IDLE {
+  note right : Initial state\nNo socket connection
+}
+
+state CONNECTED {
+  note right : Socket connected\nWaiting for BIND\nrequest
+}
+
+state BINDING {
+  note right : BIND request sent\nWaiting for response\nTimeout: 10 seconds
+}
+
+state BOUND_TX {
+  note right : Bound as TRANSMITTER\nSend-only mode\nAccepts: UNBIND,\nENQUIRE_LINK
+}
+
+state BOUND_RX {
+  note right : Bound as RECEIVER\nReceive-only mode\nAccepts: UNBIND,\nENQUIRE_LINK
+}
+
+state BOUND_TRX {
+  note right : Bound as TRANSCEIVER\nBidirectional mode\nAccepts: UNBIND,\nENQUIRE_LINK
+}
+
+state UNBINDING {
+  note right : UNBIND request sent\nWaiting for response\nTimeout: 10 seconds
+}
+
+state DISCONNECTED {
+  note right : [[#FFB6C6 Terminal State]]\nConnection closed\nGraceful shutdown
+}
+
+state ERROR_STATE {
+  note right : [[#FF6B6B Terminal State]]\nUnrecoverable error\nProtocol violation
+}
+
+' Transitions
+
+' Initial state
+[*] --> IDLE
+
+' IDLE to CONNECTED (socket connection - external trigger)
+IDLE --> CONNECTED : socket_connected()\n[external trigger]
+
+' CONNECTED to BINDING
+CONNECTED --> BINDING : on_bind(type, system_id, password)\n[type = 0x00000001, 0x00000002, 0x00000009]
+
+' BINDING success paths - transition to BOUND states
+BINDING --> BOUND_TX : on_bind_resp(BIND_TRANSMITTER_RESP, status=0)\n[ESME_ROK - success]
+
+BINDING --> BOUND_RX : on_bind_resp(BIND_RECEIVER_RESP, status=0)\n[ESME_ROK - success]
+
+BINDING --> BOUND_TRX : on_bind_resp(BIND_TRANSCEIVER_RESP, status=0)\n[ESME_ROK - success]
+
+' BINDING failure paths
+BINDING --> DISCONNECTED : on_bind_resp(*, status!=0)\n[BIND failed]
+
+BINDING --> DISCONNECTED : timeout(10s)\n[No response]
+
+' Keep-alive in BOUND states (self-transitions)
+BOUND_TX --> BOUND_TX : on_enquire_link()\n/ on_enquire_link_resp(status=0)\n[Keep-alive]
+
+BOUND_RX --> BOUND_RX : on_enquire_link()\n/ on_enquire_link_resp(status=0)\n[Keep-alive]
+
+BOUND_TRX --> BOUND_TRX : on_enquire_link()\n/ on_enquire_link_resp(status=0)\n[Keep-alive]
+
+' UNBIND from any BOUND state
+BOUND_TX --> UNBINDING : on_unbind()\n[Close session]
+
+BOUND_RX --> UNBINDING : on_unbind()\n[Close session]
+
+BOUND_TRX --> UNBINDING : on_unbind()\n[Close session]
+
+' UNBINDING success
+UNBINDING --> DISCONNECTED : on_unbind_resp(status=0)\n[ESME_ROK - success]
+
+' UNBINDING failure
+UNBINDING --> ERROR_STATE : on_unbind_resp(status!=0)\n[UNBIND failed]
+
+UNBINDING --> ERROR_STATE : timeout(10s)\n[No response]
+
+' Error transitions from any state (protocol violations)
+IDLE -.-> ERROR_STATE : SmppStateException\n[Protocol error]
+
+CONNECTED -.-> ERROR_STATE : SmppStateException\n[Protocol error]
+
+BINDING -.-> ERROR_STATE : SmppStateException\n[Protocol error]
+
+BOUND_TX -.-> ERROR_STATE : SmppStateException\n[Invalid PDU:\nDELIVER_SM in TX]
+
+BOUND_RX -.-> ERROR_STATE : SmppStateException\n[Invalid PDU:\nSUBMIT_SM in RX]
+
+BOUND_TRX -.-> ERROR_STATE : SmppStateException\n[Protocol error]
+
+' Terminal states
+DISCONNECTED --> [*]
+
+ERROR_STATE --> [*]
+
+' Legend and notes
+note bottom of BINDING
+  Timeout: 10 seconds
+  If no BIND_*_RESP received,
+  transition to DISCONNECTED
+end note
+
+note bottom of BOUND_TX
+  Phase 1: UNBIND, ENQUIRE_LINK
+  Phase 2: SUBMIT_SM, SUBMIT_SM_RESP
+
+  Rejects: DELIVER_SM
+  → SmppStateException → ERROR_STATE
+end note
+
+note bottom of BOUND_RX
+  Phase 1: UNBIND, ENQUIRE_LINK
+  Phase 2: DELIVER_SM, DELIVER_SM_RESP
+
+  Rejects: SUBMIT_SM
+  → SmppStateException → ERROR_STATE
+end note
+
+note bottom of BOUND_TRX
+  Phase 1: UNBIND, ENQUIRE_LINK
+  Phase 2: SUBMIT_SM, DELIVER_SM,
+           and their responses
+
+  Accepts all valid PDUs
+end note
+
+note bottom of UNBINDING
+  Timeout: 10 seconds
+  If no UNBIND_RESP received,
+  transition to ERROR_STATE
+end note
+
+note bottom of DISCONNECTED
+  Graceful shutdown
+  Can create new SmppClientHandler
+  with new socket FD
+end note
+
+note bottom of ERROR_STATE
+  Unrecoverable error
+  Cannot recover - requires new
+  SmppClientHandler instance
+end note
+
+legend right
+  |<#87CEEB> Normal Transitions (solid) |
+  |<#AAAAAA> Error Transitions (dotted) |
+  |<#FFB6C6> Terminal: DISCONNECTED |
+  |<#FF6B6B> Terminal: ERROR_STATE |
+  |<#FFFF00> Self-Transitions (keep-alive) |
+endlegend
+
+@enduml

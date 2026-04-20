@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
-project(simple_smpp_server
+project(smpp_client_handler
     VERSION 0.1.0
-    DESCRIPTION "SMPP Server - Process-per-client microservices"
+    DESCRIPTION "SMPP Client Handler - Single socket client for SMPP protocol"
     HOMEPAGE_URL "https://github.com/rajesh6115/opensmsc"
     LANGUAGES CXX
 )
@@ -10,29 +10,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# ── Generate config.h from config.h.in ───────────────────────────────────────
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/config/config.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/config/config.h"
-    @ONLY
-)
-
 # ── Find packages using pkg-config ────────────────────────────────────────────
 
 find_package(PkgConfig REQUIRED)
 
-# ASIO is configured in root CMakeLists.txt as asio_iface interface library
-
 # sdbus-c++ (modern C++ D-Bus binding)
 # Install: apt install libsdbus-c++-dev (Debian/Ubuntu)
-# This is MANDATORY - build will fail if not found
 pkg_check_modules(SDBUS_CPP REQUIRED sdbus-c++)
 
 # spdlog (fast C++ logging)
 # Install: apt install libspdlog-dev (Debian/Ubuntu)
 pkg_check_modules(SPDLOG QUIET spdlog)
 if(NOT SPDLOG_FOUND)
-    # Fallback: find headers directly
     find_path(SPDLOG_INCLUDE_DIR spdlog/spdlog.h
         HINTS /usr/include /usr/local/include
         DOC "spdlog header directory"
@@ -61,27 +50,25 @@ file(GLOB SMPPCXX_SOURCES
     ../external/smppcxx/src/*.cpp
 )
 
+# Source files for smpp_client_handler executable
 set(SOURCES
     src/main.cpp
-    src/tcp_server.cpp
-    src/ip_validator.cpp
-    src/smpp_service_manager.cpp
-    src/smpp_session.cpp
-    src/smpp_handler.cpp
-    src/smpp_pdu_framer.cpp
-    ${SMPPCXX_SOURCES}
+    src/smpp_client_handler.cpp
+    src/smpp_state_machine_v2.cpp
+    src/smpp_states.cpp
 )
 
+# Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     include
-    "${CMAKE_CURRENT_BINARY_DIR}/config"
-    ../external/smppcxx/include
     ${SPDLOG_INCLUDE_DIR}
+    ../external/smppcxx/include
+    ${SDBUS_CPP_INCLUDE_DIRS}
 )
 
-# Link libraries using pkg-config imported targets
+# Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
     asio_iface
     ${SDBUS_CPP_LIBRARIES}
@@ -89,32 +76,23 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pthread
 )
 
-# Add include directories from pkg-config
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ${SDBUS_CPP_INCLUDE_DIRS}
-)
-
-# Add compile flags from pkg-config
+# Add compile flags
 target_compile_options(${PROJECT_NAME} PRIVATE
     ${SDBUS_CPP_CFLAGS}
     -Wall -Wextra -Wpedantic
 )
 
-# Add link flags from pkg-config
+# Add link flags
 target_link_options(${PROJECT_NAME} PRIVATE
     ${SDBUS_CPP_LDFLAGS}
 )
 
 # ── Install ──────────────────────────────────────────────────────────────────
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-install(FILES config/allowed_ips.conf
-        DESTINATION /etc/simple_smpp_server)
-install(FILES systemd/SMPPAuthenticator@.service
-        DESTINATION /etc/systemd/system)
 
 message(STATUS "")
 message(STATUS "  ═══════════════════════════════════════════════════════")
-message(STATUS "  simple_smpp_server ${PROJECT_VERSION}")
+message(STATUS "  smpp_client_handler ${PROJECT_VERSION}")
 message(STATUS "  ───────────────────────────────────────────────────────")
 message(STATUS "  ASIO (standalone) : ${ASIO_INCLUDE_DIR}")
 message(STATUS "  sdbus-c++ (D-Bus) : ${SDBUS_CPP_VERSION}")

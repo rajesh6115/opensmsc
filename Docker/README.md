@@ -1,8 +1,8 @@
 # SMC Development Docker Environment
 
-This Docker setup provides a complete C++ development environment with CMake and dbus-c++ support.
+This Docker setup provides a complete C++ development environment with CMake and dbus-c++ support for building SMPP Server components.
 
-## Build Instructions
+## Quick Start
 
 ### Build the Docker image:
 
@@ -22,31 +22,88 @@ docker-compose up -d smsc-dev
 docker-compose exec smsc-dev bash
 ```
 
+## Building in Docker
+
+### Full Build (SMPPServer + SmppClientHandler)
+
+```bash
+cd /workspace
+build-all
+```
+
+This will compile both:
+- `simple_smpp_server` - Main SMPP server
+- `smpp_client_handler` - Per-client handler
+
+### Build Individual Components
+
+```bash
+# Build only SMPPServer
+build-server
+
+# Build only SmppClientHandler
+build-handler
+
+# Full rebuild (clean + compile)
+rebuild
+```
+
 ## Development Workflow
 
 Once inside the container, you can use these built-in aliases:
 
-- `build` - Create build directory and compile with CMake
-- `rebuild` - Clean build and recompile
+- `build` - Create build directory and compile all projects with CMake
+- `build-all` - Full build of all targets (SMPPServer + SmppClientHandler)
+- `build-server` - Build only SMPPServer
+- `build-handler` - Build only SmppClientHandler
+- `rebuild` - Clean rebuild of all projects
 - `cmake-clean` - Remove build artifacts
 
-### Example:
+### Example Workflow:
 
 ```bash
 # Inside container
 cd /workspace
-build
+
+# First time build
+build-all
+
+# Later, just rebuild
+rebuild
+
+# Work on specific component
+build-handler
+
+# Clean everything
+cmake-clean
+build-all
 ```
 
-## Building Individual Projects
+## Binary Locations
 
-Each project has its own CMakeLists.txt. Build them from workspace:
+After building, binaries are located at:
 
 ```bash
-cd /workspace/SMPPServer
-mkdir -p build && cd build
-cmake ..
-make
+# SMPP Server binary
+/workspace/build/SMPPServer/simple_smpp_server
+
+# SMPP Client Handler binary
+/workspace/build/SmppClientHandler/smpp_client_handler
+
+# List all built binaries
+ls -la /workspace/build/SMPPServer/ /workspace/build/SmppClientHandler/
+```
+
+## Testing Built Binaries
+
+```bash
+# Check if binaries were created
+file /workspace/build/SMPPServer/simple_smpp_server
+file /workspace/build/SmppClientHandler/smpp_client_handler
+
+# Run with help/version flags
+/workspace/build/SMPPServer/simple_smpp_server --help
+/workspace/build/SmppClientHandler/smpp_client_handler --help
 ```
 
 ## D-Bus Integration

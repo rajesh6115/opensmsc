@@ -1,0 +1,290 @@
+[
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/src/main.cpp.o -c /workspace/SMPPServer/src/main.cpp",
+  "file": "/workspace/SMPPServer/src/main.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/src/main.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/src/tcp_server.cpp.o -c /workspace/SMPPServer/src/tcp_server.cpp",
+  "file": "/workspace/SMPPServer/src/tcp_server.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/src/tcp_server.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/src/ip_validator.cpp.o -c /workspace/SMPPServer/src/ip_validator.cpp",
+  "file": "/workspace/SMPPServer/src/ip_validator.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/src/ip_validator.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/src/smpp_service_manager.cpp.o -c /workspace/SMPPServer/src/smpp_service_manager.cpp",
+  "file": "/workspace/SMPPServer/src/smpp_service_manager.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/src/smpp_service_manager.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/src/smpp_session.cpp.o -c /workspace/SMPPServer/src/smpp_session.cpp",
+  "file": "/workspace/SMPPServer/src/smpp_session.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/src/smpp_session.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/src/smpp_handler.cpp.o -c /workspace/SMPPServer/src/smpp_handler.cpp",
+  "file": "/workspace/SMPPServer/src/smpp_handler.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/src/smpp_handler.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/src/smpp_pdu_framer.cpp.o -c /workspace/SMPPServer/src/smpp_pdu_framer.cpp",
+  "file": "/workspace/SMPPServer/src/smpp_pdu_framer.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/src/smpp_pdu_framer.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/alert_notification.cpp.o -c /workspace/external/smppcxx/src/alert_notification.cpp",
+  "file": "/workspace/external/smppcxx/src/alert_notification.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/alert_notification.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/aux_types.cpp.o -c /workspace/external/smppcxx/src/aux_types.cpp",
+  "file": "/workspace/external/smppcxx/src/aux_types.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/aux_types.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_receiver.cpp.o -c /workspace/external/smppcxx/src/bind_receiver.cpp",
+  "file": "/workspace/external/smppcxx/src/bind_receiver.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_receiver.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_receiver_resp.cpp.o -c /workspace/external/smppcxx/src/bind_receiver_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/bind_receiver_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_receiver_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_transceiver.cpp.o -c /workspace/external/smppcxx/src/bind_transceiver.cpp",
+  "file": "/workspace/external/smppcxx/src/bind_transceiver.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_transceiver.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_transceiver_resp.cpp.o -c /workspace/external/smppcxx/src/bind_transceiver_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/bind_transceiver_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_transceiver_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_transmitter.cpp.o -c /workspace/external/smppcxx/src/bind_transmitter.cpp",
+  "file": "/workspace/external/smppcxx/src/bind_transmitter.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_transmitter.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_transmitter_resp.cpp.o -c /workspace/external/smppcxx/src/bind_transmitter_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/bind_transmitter_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/bind_transmitter_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/broadcast_sm.cpp.o -c /workspace/external/smppcxx/src/broadcast_sm.cpp",
+  "file": "/workspace/external/smppcxx/src/broadcast_sm.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/broadcast_sm.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/broadcast_sm_resp.cpp.o -c /workspace/external/smppcxx/src/broadcast_sm_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/broadcast_sm_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/broadcast_sm_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/buffer.cpp.o -c /workspace/external/smppcxx/src/buffer.cpp",
+  "file": "/workspace/external/smppcxx/src/buffer.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/buffer.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/cancel_broadcast_sm.cpp.o -c /workspace/external/smppcxx/src/cancel_broadcast_sm.cpp",
+  "file": "/workspace/external/smppcxx/src/cancel_broadcast_sm.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/cancel_broadcast_sm.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/cancel_broadcast_sm_resp.cpp.o -c /workspace/external/smppcxx/src/cancel_broadcast_sm_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/cancel_broadcast_sm_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/cancel_broadcast_sm_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/cancel_sm.cpp.o -c /workspace/external/smppcxx/src/cancel_sm.cpp",
+  "file": "/workspace/external/smppcxx/src/cancel_sm.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/cancel_sm.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/cancel_sm_resp.cpp.o -c /workspace/external/smppcxx/src/cancel_sm_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/cancel_sm_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/cancel_sm_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/data_sm.cpp.o -c /workspace/external/smppcxx/src/data_sm.cpp",
+  "file": "/workspace/external/smppcxx/src/data_sm.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/data_sm.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/data_sm_resp.cpp.o -c /workspace/external/smppcxx/src/data_sm_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/data_sm_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/data_sm_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/deliver_sm.cpp.o -c /workspace/external/smppcxx/src/deliver_sm.cpp",
+  "file": "/workspace/external/smppcxx/src/deliver_sm.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/deliver_sm.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/deliver_sm_resp.cpp.o -c /workspace/external/smppcxx/src/deliver_sm_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/deliver_sm_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/deliver_sm_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/enquire_link.cpp.o -c /workspace/external/smppcxx/src/enquire_link.cpp",
+  "file": "/workspace/external/smppcxx/src/enquire_link.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/enquire_link.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/enquire_link_resp.cpp.o -c /workspace/external/smppcxx/src/enquire_link_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/enquire_link_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/enquire_link_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/error.cpp.o -c /workspace/external/smppcxx/src/error.cpp",
+  "file": "/workspace/external/smppcxx/src/error.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/error.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/generic_nack.cpp.o -c /workspace/external/smppcxx/src/generic_nack.cpp",
+  "file": "/workspace/external/smppcxx/src/generic_nack.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/generic_nack.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/header.cpp.o -c /workspace/external/smppcxx/src/header.cpp",
+  "file": "/workspace/external/smppcxx/src/header.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/header.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/outbind.cpp.o -c /workspace/external/smppcxx/src/outbind.cpp",
+  "file": "/workspace/external/smppcxx/src/outbind.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/outbind.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/query_broadcast_sm.cpp.o -c /workspace/external/smppcxx/src/query_broadcast_sm.cpp",
+  "file": "/workspace/external/smppcxx/src/query_broadcast_sm.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/query_broadcast_sm.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/query_broadcast_sm_resp.cpp.o -c /workspace/external/smppcxx/src/query_broadcast_sm_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/query_broadcast_sm_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/query_broadcast_sm_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/query_sm.cpp.o -c /workspace/external/smppcxx/src/query_sm.cpp",
+  "file": "/workspace/external/smppcxx/src/query_sm.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/query_sm.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/query_sm_resp.cpp.o -c /workspace/external/smppcxx/src/query_sm_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/query_sm_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/query_sm_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/replace_sm.cpp.o -c /workspace/external/smppcxx/src/replace_sm.cpp",
+  "file": "/workspace/external/smppcxx/src/replace_sm.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/replace_sm.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/replace_sm_resp.cpp.o -c /workspace/external/smppcxx/src/replace_sm_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/replace_sm_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/replace_sm_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/submit_multi.cpp.o -c /workspace/external/smppcxx/src/submit_multi.cpp",
+  "file": "/workspace/external/smppcxx/src/submit_multi.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/submit_multi.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/submit_multi_resp.cpp.o -c /workspace/external/smppcxx/src/submit_multi_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/submit_multi_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/submit_multi_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/submit_sm.cpp.o -c /workspace/external/smppcxx/src/submit_sm.cpp",
+  "file": "/workspace/external/smppcxx/src/submit_sm.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/submit_sm.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/submit_sm_resp.cpp.o -c /workspace/external/smppcxx/src/submit_sm_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/submit_sm_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/submit_sm_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/unbind.cpp.o -c /workspace/external/smppcxx/src/unbind.cpp",
+  "file": "/workspace/external/smppcxx/src/unbind.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/unbind.cpp.o"
+},
+{
+  "directory": "/workspace/build/SMPPServer",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SMPPServer/include -I/workspace/build/SMPPServer/config -I/workspace/SMPPServer/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/unbind_resp.cpp.o -c /workspace/external/smppcxx/src/unbind_resp.cpp",
+  "file": "/workspace/external/smppcxx/src/unbind_resp.cpp",
+  "output": "SMPPServer/CMakeFiles/simple_smpp_server.dir/__/external/smppcxx/src/unbind_resp.cpp.o"
+},
+{
+  "directory": "/workspace/build/SmppClientHandler",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SmppClientHandler/include -I/workspace/SmppClientHandler/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/smpp_client_handler.dir/src/main.cpp.o -c /workspace/SmppClientHandler/src/main.cpp",
+  "file": "/workspace/SmppClientHandler/src/main.cpp",
+  "output": "SmppClientHandler/CMakeFiles/smpp_client_handler.dir/src/main.cpp.o"
+},
+{
+  "directory": "/workspace/build/SmppClientHandler",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SmppClientHandler/include -I/workspace/SmppClientHandler/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/smpp_client_handler.dir/src/smpp_client_handler.cpp.o -c /workspace/SmppClientHandler/src/smpp_client_handler.cpp",
+  "file": "/workspace/SmppClientHandler/src/smpp_client_handler.cpp",
+  "output": "SmppClientHandler/CMakeFiles/smpp_client_handler.dir/src/smpp_client_handler.cpp.o"
+},
+{
+  "directory": "/workspace/build/SmppClientHandler",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SmppClientHandler/include -I/workspace/SmppClientHandler/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/smpp_client_handler.dir/src/smpp_state_machine_v2.cpp.o -c /workspace/SmppClientHandler/src/smpp_state_machine_v2.cpp",
+  "file": "/workspace/SmppClientHandler/src/smpp_state_machine_v2.cpp",
+  "output": "SmppClientHandler/CMakeFiles/smpp_client_handler.dir/src/smpp_state_machine_v2.cpp.o"
+},
+{
+  "directory": "/workspace/build/SmppClientHandler",
+  "command": "/usr/bin/c++ -DASIO_NO_DEPRECATED -DASIO_STANDALONE -I/workspace/SmppClientHandler/include -I/workspace/SmppClientHandler/../external/smppcxx/include  -Wall -Wextra -pedantic -std=gnu++17 -I/usr/include -Wall -Wextra -Wpedantic -o CMakeFiles/smpp_client_handler.dir/src/smpp_states.cpp.o -c /workspace/SmppClientHandler/src/smpp_states.cpp",
+  "file": "/workspace/SmppClientHandler/src/smpp_states.cpp",
+  "output": "SmppClientHandler/CMakeFiles/smpp_client_handler.dir/src/smpp_states.cpp.o"
+}
+]

@@ -5,6 +5,8 @@
 
 > A production-grade SMSC (Short Message Service Center) built as a collection of independent microservices that communicate via D-Bus, appearing as a single unified SMSP gateway to external clients.
 
+**SMPP Specification**: This implementation is based on the [SMPP v5.0 Specification](https://smpp.org/SMPP_v5.pdf) - The Short Message Peer-to-Peer Protocol version 5.0, which defines the protocol for exchanging SMS messages with message centers.
+
 ---
 
 ## 📌 Versioning Policy
@@ -700,6 +702,7 @@ Services register on D-Bus:
 
 ## 📚 Documentation
 
+### Project Documentation
 - **[SYSTEM_OOAD_DESIGN.md](doc/SYSTEM_OOAD_DESIGN.md)** - Complete architecture and design patterns
 - **[CURRENT_STATUS.md](doc/CURRENT_STATUS.md)** - Current implementation status and blockers
 - **[BUILD_AND_TEST_PLAN.md](doc/BUILD_AND_TEST_PLAN.md)** - Detailed build and test instructions
@@ -708,6 +711,20 @@ Services register on D-Bus:
 - **[VERSIONING.md](doc/VERSIONING.md)** - CMake-based versioning system (config.h.in)
 - **[diagrams/](doc/diagrams/)** - PlantUML sequence diagrams (connection flow, authentication, keep-alive)
 - **[SmppServer/](doc/SmppServer/)** - SMPP protocol reference and handler documentation
+
+### Component Documentation
+- **[SMPP_CLIENT_HANDLER_01_OVERVIEW.md](doc/SMPP_CLIENT_HANDLER_01_OVERVIEW.md)** - SmppClientHandler component overview
+- **[SMPP_CLIENT_HANDLER_02_STATE_PATTERN.md](doc/SMPP_CLIENT_HANDLER_02_STATE_PATTERN.md)** - State pattern design
+- **[SMPP_CLIENT_HANDLER_03_STATE_TRANSITIONS.md](doc/SMPP_CLIENT_HANDLER_03_STATE_TRANSITIONS.md)** - State machine transitions
+
+### SMPP Protocol Reference
+- **[SMPP v5.0 Official Specification](https://smpp.org/SMPP_v5.pdf)** - Complete SMPP protocol definition (external)
+- **[SMPP v3.4 Reference](https://en.wikipedia.org/wiki/SMPP)** - Protocol overview and history
+- **Protocol Features Implemented**:
+  - BIND operations (TRANSMITTER, RECEIVER, TRANSCEIVER)
+  - UNBIND graceful disconnection
+  - ENQUIRE_LINK keep-alive
+  - *(Phase 2): SUBMIT_SM, DELIVER_SM for message operations*
 
 ### D-Bus Interface Files
 

@@ -3,23 +3,11 @@
 #include "ip_validator.hpp"
 #include "logger.hpp"
 #include "session_id.hpp"
+#include "smpp_client_handler.hpp"
 #include "smpp_service_manager.hpp"
-#include "smpp_session.hpp"
-#include "smpp_handler.hpp"
 
 #include <asio.hpp>
-
-#include <cstring>
 #include <memory>
-#include <string>
-#include <vector>
-
-namespace {
-    uint32_t ntoh32(const uint8_t* ptr) {
-        return ((uint32_t)ptr[0] << 24) | ((uint32_t)ptr[1] << 16) |
-               ((uint32_t)ptr[2] << 8) | ((uint32_t)ptr[3]);
-    }
-}
 
 // ── TcpServer ─────────────────────────────────────────────────────────────────
 
@@ -174,7 +162,8 @@ void TcpServer::on_body_read(std::shared_ptr<asio::ip::tcp::socket> socket,
     std::vector<uint8_t> full_pdu(*header_buffer);
     full_pdu.insert(full_pdu.end(), body_buffer->begin(), body_buffer->end());
 
-    SmppHandler::dispatch_pdu(full_pdu, *session, *socket);
+    // TODO: Implement PDU dispatch logic
+    // SmppHandler::dispatch_pdu(full_pdu, *session, *socket);
 
     if (socket->is_open()) {
         read_pdu_header(socket, session);
