@@ -49,7 +49,8 @@ RUN apt-get install -y \
 
 # Install sdbus-c++ (C++ bindings for D-Bus)
 RUN apt-get install -y \
-    libsdbus-c++-dev
+    libsdbus-c++-dev \
+    libsdbus-c++-bin
 
 # Install Google Test (gtest)
 RUN apt-get install -y \

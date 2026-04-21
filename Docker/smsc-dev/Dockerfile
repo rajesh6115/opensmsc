@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libdbus-1-dev \
     libdbus-c++-dev \
     libsdbus-c++-dev \
+    libsdbus-c++-bin \
     libspdlog-dev \
     libfmt-dev \
     dbus \
@@ -47,6 +48,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libdbus-1-dev \
     libdbus-c++-dev \
     libsdbus-c++-dev \
+    libsdbus-c++-bin \
     libspdlog-dev \
     libfmt-dev \
     dbus \
