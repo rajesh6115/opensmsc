@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-Bus Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node name="/com/smmc/SmppClient">
+  <interface name="com.smmc.SmppClient">
+
+    <!-- GetStatus Method -->
+    <!--
+      Get current status of the SMPP client connection
+
+      Output:
+        status (s): Current connection status (connecting, connected, binding, bound, disconnecting, disconnected)
+    -->
+    <method name="GetStatus">
+      <arg type="s" direction="out" name="status">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Current SMPP client connection status"/>
+      </arg>
+    </method>
+
+    <!-- GetSessionInfo Method -->
+    <!--
+      Get detailed session information for the SMPP client
+
+      Output:
+        session_info (a{sv}): Dictionary containing session details
+          - username: SMPP login username
+          - source_ip: Source IP address of the client
+          - bind_type: SMPP bind type (Transmitter, Receiver, Transceiver)
+          - started_from: Timestamp when session started (microseconds since epoch)
+          - message_count: Number of messages sent/received
+          - uptime: Session uptime in seconds
+    -->
+    <method name="GetSessionInfo">
+      <arg type="a{sv}" direction="out" name="session_info">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Dictionary containing detailed session information"/>
+      </arg>
+    </method>
+
+    <!-- Properties -->
+
+    <!-- Username Property (read-only) -->
+    <!--
+      SMPP login username for this client connection
+    -->
+    <property name="Username" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="SMPP login username for this client"/>
+    </property>
+
+    <!-- SourceIP Property (read-only) -->
+    <!--
+      Source IP address of the connected client
+    -->
+    <property name="SourceIP" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Source IP address of the SMPP client"/>
+    </property>
+
+    <!-- BindType Property (read-only) -->
+    <!--
+      SMPP bind type: Transmitter, Receiver, or Transceiver
+    -->
+    <property name="BindType" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="SMPP bind type (Transmitter, Receiver, Transceiver)"/>
+    </property>
+
+    <!-- StartedFrom Property (read-only) -->
+    <!--
+      Timestamp when the client session was started
+    -->
+    <property name="StartedFrom" type="t" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Session start timestamp (microseconds since epoch)"/>
+    </property>
+
+    <!-- Status Property (read-only) -->
+    <!--
+      Current connection status
+    -->
+    <property name="Status" type="s" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Current SMPP client connection status"/>
+    </property>
+
+    <!-- MessageCount Property (read-only) -->
+    <!--
+      Total number of messages processed by this client
+    -->
+    <property name="MessageCount" type="u" access="read">
+      <annotation name="org.freedesktop.DBus.Description"
+                 value="Total messages sent/received by this client"/>
+    </property>
+
+    <!-- Signals -->
+
+    <!-- StatusChanged Signal -->
+    <!--
+      Emitted when the client connection status changes
+
+      Signals:
+        old_status (s): Previous connection status
+        new_status (s): New connection status
+        timestamp (t): Timestamp of status change
+    -->
+    <signal name="StatusChanged">
+      <arg type="s" name="old_status">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Previous connection status"/>
+      </arg>
+      <arg type="s" name="new_status">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="New connection status"/>
+      </arg>
+      <arg type="t" name="timestamp">
+        <annotation name="org.freedesktop.DBus.Description"
+                   value="Status change timestamp (microseconds since epoch)"/>
+      </arg>
+    </signal>
+
+  </interface>
+
+</node>
