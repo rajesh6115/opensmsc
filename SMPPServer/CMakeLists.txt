@@ -21,7 +21,19 @@ configure_file(
 
 find_package(PkgConfig REQUIRED)
 
-# ASIO is configured in root CMakeLists.txt as asio_iface interface library
+# ASIO standalone (header-only)
+if(NOT TARGET asio_iface)
+    find_path(ASIO_INCLUDE_DIR asio.hpp
+        HINTS /usr/include /usr/local/include
+        DOC "ASIO standalone include directory"
+    )
+    if(NOT ASIO_INCLUDE_DIR)
+        message(FATAL_ERROR "ASIO not found. Install libasio-dev.")
+    endif()
+    add_library(asio_iface INTERFACE)
+    target_include_directories(asio_iface INTERFACE ${ASIO_INCLUDE_DIR})
+    target_compile_definitions(asio_iface INTERFACE ASIO_STANDALONE)
+endif()
 
 # sdbus-c++ (modern C++ D-Bus binding)
 # Install: apt install libsdbus-c++-dev (Debian/Ubuntu)
@@ -95,20 +107,11 @@ install(FILES "${ISERVER_XML}"
 
 # ── Sources ──────────────────────────────────────────────────────────────────
 
-# Find all smppcxx source files
-file(GLOB SMPPCXX_SOURCES
-    ../external/smppcxx/src/*.cpp
-)
-
 set(SOURCES
     src/main.cpp
     src/tcp_server.cpp
     src/ip_validator.cpp
-    src/smpp_service_manager.cpp
-    src/smpp_session.cpp
-    src/smpp_handler.cpp
-    src/smpp_pdu_framer.cpp
-    ${SMPPCXX_SOURCES}
+    src/connection_registry.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -187,6 +190,12 @@ target_compile_options(test_iserver_dbus PRIVATE ${SDBUS_CPP_CFLAGS})
 target_link_options(test_iserver_dbus PRIVATE ${SDBUS_CPP_LDFLAGS})
 
 add_test(NAME IServerDbusTests COMMAND test_iserver_dbus)
+
+add_executable(test_connection_registry tests/test_connection_registry.cpp src/connection_registry.cpp)
+target_include_directories(test_connection_registry PRIVATE include)
+target_link_libraries(test_connection_registry PRIVATE GTest::gtest GTest::gtest_main)
+target_compile_options(test_connection_registry PRIVATE -Wall -Wextra)
+add_test(NAME ConnectionRegistryTests COMMAND test_connection_registry)
 
 message(STATUS "")
 message(STATUS "  ═══════════════════════════════════════════════════════")
