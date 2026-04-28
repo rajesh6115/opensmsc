@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+  "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+
+<node name="/com/telecom/smpp/auth">
+
+  <interface name="com.telecom.smpp.IAuth">
+
+    <!-- Validates SMPP bind credentials. Called by SmppClientHandler at bind time only. -->
+    <method name="Authenticate">
+      <arg name="uuid"       type="s" direction="in"/>
+      <arg name="system_id"  type="s" direction="in"/>
+      <arg name="password"   type="s" direction="in"/>
+      <arg name="source_ip"  type="s" direction="in"/>
+      <arg name="success"    type="b" direction="out"/>
+      <arg name="error_code" type="u" direction="out"/>
+    </method>
+
+    <!-- Reloads credentials file. Equivalent to SIGHUP. -->
+    <method name="ReloadCredentials">
+    </method>
+
+  </interface>
+
+</node>
