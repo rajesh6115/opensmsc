@@ -167,6 +167,27 @@ install(FILES files/dbus/com.opensmsc.SmppServer.xml
         DESTINATION /usr/share/dbus-1/interfaces/
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
+# ── Tests ────────────────────────────────────────────────────────────────────
+enable_testing()
+find_package(GTest REQUIRED)
+
+add_executable(test_iserver_dbus tests/test_iserver_dbus.cpp)
+add_dependencies(test_iserver_dbus generate_iserver_dbus)
+
+target_include_directories(test_iserver_dbus PRIVATE
+    include
+    ${SDBUS_CPP_INCLUDE_DIRS}
+)
+target_link_libraries(test_iserver_dbus PRIVATE
+    GTest::gtest
+    GTest::gtest_main
+    ${SDBUS_CPP_LIBRARIES}
+)
+target_compile_options(test_iserver_dbus PRIVATE ${SDBUS_CPP_CFLAGS})
+target_link_options(test_iserver_dbus PRIVATE ${SDBUS_CPP_LDFLAGS})
+
+add_test(NAME IServerDbusTests COMMAND test_iserver_dbus)
+
 message(STATUS "")
 message(STATUS "  ═══════════════════════════════════════════════════════")
 message(STATUS "  simple_smpp_server ${PROJECT_VERSION}")
