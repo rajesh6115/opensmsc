@@ -63,25 +63,30 @@ file(GLOB SMPPCXX_SOURCES
     ../external/smppcxx/src/*.cpp
 )
 
-# ── Generate D-Bus Adaptors from XML ────────────────────────────────────────
+# ── Generate D-Bus Adaptors/Proxies from XML ────────────────────────────────
 
-# Generate SmppClient adaptor from D-Bus interface definition
-set(DBUS_XML_FILE "${CMAKE_CURRENT_SOURCE_DIR}/files/dbus/com.smmc.SmppClient.xml")
-set(SMPP_CLIENT_ADAPTOR_HEADER "${GENERATED_DBUS_DIR}/SmppClientAdaptor.gen.h")
+# IClientHandler — owned by this module (adaptor + proxy)
+set(ICLIENTHANDLER_XML     "${CMAKE_CURRENT_SOURCE_DIR}/files/dbus/IClientHandler.xml")
+set(ICLIENTHANDLER_ADAPTOR "${CMAKE_CURRENT_SOURCE_DIR}/include/generated/IClientHandler_adaptor.hpp")
+set(ICLIENTHANDLER_PROXY   "${CMAKE_CURRENT_SOURCE_DIR}/include/generated/IClientHandler_proxy.hpp")
 
 add_custom_command(
-    OUTPUT "${SMPP_CLIENT_ADAPTOR_HEADER}"
-    COMMAND "${SDBUS_CPP_XML2CPP}" "${DBUS_XML_FILE}"
-            --adaptor="${SMPP_CLIENT_ADAPTOR_HEADER}"
-    DEPENDS "${DBUS_XML_FILE}"
-    COMMENT "Generating D-Bus adaptor for SmppClient from XML"
+    OUTPUT  "${ICLIENTHANDLER_ADAPTOR}" "${ICLIENTHANDLER_PROXY}"
+    COMMAND "${SDBUS_CPP_XML2CPP}" "${ICLIENTHANDLER_XML}"
+            --adaptor="${ICLIENTHANDLER_ADAPTOR}"
+            --proxy="${ICLIENTHANDLER_PROXY}"
+    DEPENDS "${ICLIENTHANDLER_XML}"
+    COMMENT "Generating IClientHandler adaptor/proxy"
     VERBATIM
 )
 
-# Create a custom target to ensure the adaptor is generated before compilation
-add_custom_target(generate_smpp_client_adaptor ALL
-    DEPENDS "${SMPP_CLIENT_ADAPTOR_HEADER}"
+add_custom_target(generate_iclienthandler_dbus ALL
+    DEPENDS "${ICLIENTHANDLER_ADAPTOR}" "${ICLIENTHANDLER_PROXY}"
 )
+
+install(FILES "${ICLIENTHANDLER_XML}"
+        DESTINATION /usr/share/dbus-1/interfaces/
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
 # ── Source files ─────────────────────────────────────────────────────────────
 
@@ -96,8 +101,8 @@ set(SOURCES
 # Create executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Ensure adaptor is generated before building the executable
-add_dependencies(${PROJECT_NAME} generate_smpp_client_adaptor)
+# Ensure adaptors are generated before building the executable
+add_dependencies(${PROJECT_NAME} generate_iclienthandler_dbus)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     include
@@ -136,6 +141,18 @@ install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 install(FILES files/dbus/com.smmc.SmppClient.xml
         DESTINATION /usr/share/dbus-1/interfaces/
         PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+
+# ── Tests ────────────────────────────────────────────────────────────────────
+enable_testing()
+find_package(GTest REQUIRED)
+
+add_executable(test_iclienthandler_dbus tests/test_iclienthandler_dbus.cpp)
+add_dependencies(test_iclienthandler_dbus generate_iclienthandler_dbus)
+target_include_directories(test_iclienthandler_dbus PRIVATE include ${SDBUS_CPP_INCLUDE_DIRS})
+target_link_libraries(test_iclienthandler_dbus PRIVATE GTest::gtest GTest::gtest_main ${SDBUS_CPP_LIBRARIES})
+target_compile_options(test_iclienthandler_dbus PRIVATE ${SDBUS_CPP_CFLAGS})
+target_link_options(test_iclienthandler_dbus PRIVATE ${SDBUS_CPP_LDFLAGS})
+add_test(NAME IClientHandlerDbusTests COMMAND test_iclienthandler_dbus)
 
 message(STATUS "")
 message(STATUS "  ═══════════════════════════════════════════════════════")
