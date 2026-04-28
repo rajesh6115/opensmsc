@@ -69,23 +69,29 @@ endif()
 
 # ── Generate D-Bus Adaptors from XML ────────────────────────────────────────
 
-# Generate SmppServer adaptor from D-Bus interface definition
-set(DBUS_XML_FILE "${CMAKE_CURRENT_SOURCE_DIR}/files/dbus/com.opensmsc.SmppServer.xml")
-set(SMPP_SERVER_ADAPTOR_HEADER "${GENERATED_DBUS_DIR}/SmppServerAdaptor.gen.h")
+# Generate IServer adaptor + proxy from IServer.xml
+set(ISERVER_XML "${CMAKE_CURRENT_SOURCE_DIR}/files/dbus/IServer.xml")
+set(ISERVER_ADAPTOR "${CMAKE_CURRENT_SOURCE_DIR}/include/generated/IServer_adaptor.hpp")
+set(ISERVER_PROXY   "${CMAKE_CURRENT_SOURCE_DIR}/include/generated/IServer_proxy.hpp")
 
 add_custom_command(
-    OUTPUT "${SMPP_SERVER_ADAPTOR_HEADER}"
-    COMMAND "${SDBUS_CPP_XML2CPP}" "${DBUS_XML_FILE}"
-            --adaptor="${SMPP_SERVER_ADAPTOR_HEADER}"
-    DEPENDS "${DBUS_XML_FILE}"
-    COMMENT "Generating D-Bus adaptor for SmppServer from XML"
+    OUTPUT  "${ISERVER_ADAPTOR}" "${ISERVER_PROXY}"
+    COMMAND "${SDBUS_CPP_XML2CPP}" "${ISERVER_XML}"
+            --adaptor="${ISERVER_ADAPTOR}"
+            --proxy="${ISERVER_PROXY}"
+    DEPENDS "${ISERVER_XML}"
+    COMMENT "Generating IServer adaptor/proxy from IServer.xml"
     VERBATIM
 )
 
-# Create a custom target to ensure the adaptor is generated before compilation
-add_custom_target(generate_smpp_server_adaptor ALL
-    DEPENDS "${SMPP_SERVER_ADAPTOR_HEADER}"
+add_custom_target(generate_iserver_dbus ALL
+    DEPENDS "${ISERVER_ADAPTOR}" "${ISERVER_PROXY}"
 )
+
+# Install IServer.xml to standard D-Bus interfaces path
+install(FILES "${ISERVER_XML}"
+        DESTINATION /usr/share/dbus-1/interfaces/
+        PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
 # ── Sources ──────────────────────────────────────────────────────────────────
 
@@ -107,8 +113,8 @@ set(SOURCES
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-# Ensure adaptor is generated before building the executable
-add_dependencies(${PROJECT_NAME} generate_smpp_server_adaptor)
+# Ensure adaptors are generated before building the executable
+add_dependencies(${PROJECT_NAME} generate_iserver_dbus)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     include

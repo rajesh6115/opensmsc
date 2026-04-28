@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+  "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+
+<node name="/com/telecom/smpp/server">
+
+  <interface name="com.telecom.smpp.IServer">
+
+    <!-- Called by SmppClientHandler at startup to claim its socket FD. One-time claim. -->
+    <method name="GetSocket">
+      <arg name="uuid" type="s" direction="in"/>
+      <arg name="fd"   type="h" direction="out"/>
+    </method>
+
+    <!-- Called by SmppClientHandler after successful bind to push session details. -->
+    <method name="UpdateSessionDetails">
+      <arg name="uuid"      type="s" direction="in"/>
+      <arg name="system_id" type="s" direction="in"/>
+      <arg name="state"     type="s" direction="in"/>
+    </method>
+
+    <!-- Returns number of active sessions for a given source IP. -->
+    <method name="GetConnectionCount">
+      <arg name="ip"    type="s" direction="in"/>
+      <arg name="count" type="u" direction="out"/>
+    </method>
+
+    <!-- Returns snapshot of all active sessions. -->
+    <method name="GetAllSessions">
+      <arg name="sessions" type="a(ssss)" direction="out"/>
+    </method>
+
+    <!-- Updates the per-source-IP connection limit at runtime. -->
+    <method name="SetMaxConnectionsPerIp">
+      <arg name="ip"  type="s" direction="in"/>
+      <arg name="max" type="u" direction="in"/>
+    </method>
+
+    <!-- Force-terminates all sessions from a given source IP. -->
+    <method name="DisconnectAll">
+      <arg name="ip"     type="s" direction="in"/>
+      <arg name="reason" type="s" direction="in"/>
+    </method>
+
+    <!-- Emitted when a new SmppClientHandler process has been launched. -->
+    <signal name="SessionStarted">
+      <arg name="session_id" type="s"/>
+      <arg name="client_ip"  type="s"/>
+    </signal>
+
+  </interface>
+
+</node>
