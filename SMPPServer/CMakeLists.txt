@@ -113,6 +113,7 @@ set(SOURCES
     src/ip_validator.cpp
     src/connection_registry.cpp
     src/smpp_server_service.cpp
+    src/session_launcher.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -197,6 +198,12 @@ target_include_directories(test_connection_registry PRIVATE include)
 target_link_libraries(test_connection_registry PRIVATE GTest::gtest GTest::gtest_main)
 target_compile_options(test_connection_registry PRIVATE -Wall -Wextra)
 add_test(NAME ConnectionRegistryTests COMMAND test_connection_registry)
+
+add_executable(test_session_launcher tests/test_session_launcher.cpp src/session_launcher.cpp)
+target_include_directories(test_session_launcher PRIVATE include ${SPDLOG_INCLUDE_DIR})
+target_link_libraries(test_session_launcher PRIVATE GTest::gtest GTest::gtest_main ${FMT_LIBRARIES} pthread)
+target_compile_options(test_session_launcher PRIVATE -Wall -Wextra)
+add_test(NAME SessionLauncherTests COMMAND test_session_launcher)
 
 add_executable(test_iserver_methods
     tests/test_iserver_methods.cpp

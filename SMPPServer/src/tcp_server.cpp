@@ -2,6 +2,7 @@
 #include "ip_validator.hpp"
 #include "logger.hpp"
 #include "session_id.hpp"
+#include "session_launcher.hpp"
 #include "smpp_server_service.hpp"
 
 #include <asio.hpp>
@@ -57,11 +58,11 @@ void TcpServer::handle_connection(std::shared_ptr<asio::ip::tcp::socket> socket)
     const std::string uuid   = generate_session_id();
     const int         raw_fd = socket->native_handle();
 
-    // register_session stores fd + emits SessionStarted signal
     svc_.register_session(uuid, raw_fd, client_ip);
-    // Transfer ownership so fd stays open for SmppClientHandler to claim
-    socket->release();
+    socket->release();  // fd ownership transferred to SmppClientHandler via GetSocket
 
-    // T9: systemd-run launch of smpp_client_handler --uuid=uuid --client-ip=client_ip
-    LOG_INFO("TcpServer", "accepted uuid={} ip={}", uuid, client_ip);
+    if (!launch_client_handler(uuid, client_ip)) {
+        LOG_ERROR("TcpServer", "failed to launch handler for uuid={}", uuid);
+        // registry entry will remain until SmppClientHandler claims or times out
+    }
 }
