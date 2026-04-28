@@ -1,9 +1,12 @@
 #include "connection_registry.hpp"
 #include "ip_validator.hpp"
 #include "logger.hpp"
+#include "smpp_server_service.hpp"
 #include "tcp_server.hpp"
 
 #include <asio.hpp>
+#include <sdbus-c++/sdbus-c++.h>
+
 #include <csignal>
 #include <cstdlib>
 #include <memory>
@@ -12,18 +15,11 @@
 #include <thread>
 #include <vector>
 
-static constexpr uint16_t    DEFAULT_PORT      = 2775;
-static constexpr const char* DEFAULT_IP_CONFIG = "/etc/simple_smpp_server/allowed_ips.conf";
-static constexpr const char* DEFAULT_LOG_FILE  = "/var/log/simple_smpp_server/server.log";
-static constexpr const char* DEFAULT_LOG_LEVEL = "info";
+static constexpr uint16_t    DEFAULT_PORT       = 2775;
+static constexpr const char* DEFAULT_IP_CONFIG  = "/etc/simple_smpp_server/allowed_ips.conf";
+static constexpr const char* DEFAULT_LOG_FILE   = "/var/log/simple_smpp_server/server.log";
+static constexpr const char* DEFAULT_LOG_LEVEL  = "info";
 static constexpr uint32_t    DEFAULT_MAX_PER_IP = 5;
-
-static void print_usage(const char* prog)
-{
-    fprintf(stderr,
-            "Usage: %s [--port=N] [--ip-config=FILE] [--log-level=LEVEL]\n",
-            prog);
-}
 
 int main(int argc, char* argv[])
 {
@@ -40,29 +36,41 @@ int main(int argc, char* argv[])
         if      (arg.rfind("--port=",      0) == 0) port          = static_cast<uint16_t>(std::stoul(arg.substr(7)));
         else if (arg.rfind("--ip-config=", 0) == 0) ip_config     = arg.substr(12);
         else if (arg.rfind("--log-level=", 0) == 0) log_level_str = arg.substr(12);
-        else if (arg == "--help" || arg == "-h") { print_usage(argv[0]); return EXIT_SUCCESS; }
+        else if (arg == "--help" || arg == "-h") {
+            fprintf(stderr, "Usage: %s [--port=N] [--ip-config=FILE] [--log-level=LEVEL]\n", argv[0]);
+            return EXIT_SUCCESS;
+        }
     }
 
     auto log_level = logger::level_from_string(log_level_str);
     logger::init(DEFAULT_LOG_FILE, log_level);
-
     LOG_INFO("main", "simple_smpp_server starting port={} ip_config={}", port, ip_config);
 
     try {
-        auto validator = std::make_shared<IpValidator>(ip_config);
         auto registry  = std::make_shared<ConnectionRegistry>(DEFAULT_MAX_PER_IP);
+        auto validator = std::make_shared<IpValidator>(ip_config);
 
+        // D-Bus setup
+        auto dbus_conn = sdbus::createSystemBusConnection(SmppServerService::SERVICE_NAME);
+        auto dbus_obj  = sdbus::createObject(*dbus_conn, SmppServerService::OBJ_PATH);
+        SmppServerService svc(*dbus_obj, registry);
+        dbus_obj->finishRegistration();
+
+        // D-Bus event loop on a dedicated thread
+        std::thread dbus_thread([&dbus_conn] { dbus_conn->enterEventLoop(); });
+
+        // ASIO acceptor
         asio::io_context io_ctx;
-
         asio::signal_set signals(io_ctx, SIGINT, SIGTERM);
-        signals.async_wait([&io_ctx](const asio::error_code& ec, int sig) {
+        signals.async_wait([&](const asio::error_code& ec, int sig) {
             if (!ec) {
                 LOG_INFO("main", "signal {} — stopping", sig);
                 io_ctx.stop();
+                dbus_conn->leaveEventLoop();
             }
         });
 
-        TcpServer server(io_ctx, port, validator, registry);
+        TcpServer server(io_ctx, port, validator, svc);
 
         const unsigned int n = std::max(2u, std::thread::hardware_concurrency());
         LOG_INFO("main", "io_context running on {} thread(s)", n);
@@ -73,6 +81,8 @@ int main(int argc, char* argv[])
             workers.emplace_back([&io_ctx]{ io_ctx.run(); });
         io_ctx.run();
         for (auto& t : workers) t.join();
+
+        if (dbus_thread.joinable()) dbus_thread.join();
 
     } catch (const std::exception& ex) {
         LOG_FATAL("main", "{}", ex.what());

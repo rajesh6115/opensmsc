@@ -112,6 +112,7 @@ set(SOURCES
     src/tcp_server.cpp
     src/ip_validator.cpp
     src/connection_registry.cpp
+    src/smpp_server_service.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
@@ -196,6 +197,18 @@ target_include_directories(test_connection_registry PRIVATE include)
 target_link_libraries(test_connection_registry PRIVATE GTest::gtest GTest::gtest_main)
 target_compile_options(test_connection_registry PRIVATE -Wall -Wextra)
 add_test(NAME ConnectionRegistryTests COMMAND test_connection_registry)
+
+add_executable(test_iserver_methods
+    tests/test_iserver_methods.cpp
+    src/smpp_server_service.cpp
+    src/connection_registry.cpp
+)
+add_dependencies(test_iserver_methods generate_iserver_dbus)
+target_include_directories(test_iserver_methods PRIVATE include ${SDBUS_CPP_INCLUDE_DIRS} ${SPDLOG_INCLUDE_DIR})
+target_link_libraries(test_iserver_methods PRIVATE GTest::gtest GTest::gtest_main ${SDBUS_CPP_LIBRARIES} ${FMT_LIBRARIES} pthread)
+target_compile_options(test_iserver_methods PRIVATE ${SDBUS_CPP_CFLAGS} -Wall -Wextra)
+target_link_options(test_iserver_methods PRIVATE ${SDBUS_CPP_LDFLAGS})
+add_test(NAME IServerMethodsTests COMMAND test_iserver_methods)
 
 message(STATUS "")
 message(STATUS "  ═══════════════════════════════════════════════════════")
