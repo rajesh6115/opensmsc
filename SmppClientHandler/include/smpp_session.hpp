@@ -8,6 +8,7 @@
 #include <sdbus-c++/sdbus-c++.h>
 #include <spdlog/spdlog.h>
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -57,7 +58,8 @@ private:
     void handle_bind(const smpp::Header& hdr, const std::vector<uint8_t>& body);
     void handle_unbind(const smpp::Header& hdr);
     void handle_enquire_link(const smpp::Header& hdr);
-    void handle_submit_sm(const smpp::Header& hdr);
+    void handle_submit_sm(const smpp::Header& hdr, const std::vector<uint8_t>& body);
+    std::string next_message_id();
 
     void send_pdu(std::vector<uint8_t> pdu);
     void do_disconnect(const std::string& reason);
@@ -91,5 +93,7 @@ private:
     asio::steady_timer                   el_timer_;
     asio::steady_timer                   el_timeout_timer_;
 
+    std::atomic<uint32_t>                msg_seq_{0};
+    std::string                          msg_id_prefix_;  // first 8 chars of uuid
     std::vector<uint8_t>                 header_buf_;
 };

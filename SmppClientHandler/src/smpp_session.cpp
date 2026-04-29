@@ -2,6 +2,8 @@
 
 #include <chrono>
 #include <spdlog/spdlog.h>
+#include <sstream>
+#include <iomanip>
 
 static constexpr const char* ISERVER_IFACE = "com.telecom.smpp.IServer";
 static constexpr const char* ISERVER_PATH  = "/com/telecom/smpp/server";
@@ -29,6 +31,7 @@ SmppSession::SmppSession(asio::io_context&   io_ctx,
     , el_timeout_sec_(enquire_link_timeout_sec)
     , el_timer_(io_ctx)
     , el_timeout_timer_(io_ctx)
+    , msg_id_prefix_(uuid.size() >= 8 ? uuid.substr(0, 8) : uuid)
     , header_buf_(16)
 {
     server_proxy_ = sdbus::createProxy(dbus_conn_, server_svc_, ISERVER_PATH);
@@ -108,7 +111,7 @@ void SmppSession::dispatch(const smpp::Header& hdr, const std::vector<uint8_t>& 
         case smpp::ENQUIRE_LINK:
             handle_enquire_link(hdr); break;
         case smpp::SUBMIT_SM:
-            handle_submit_sm(hdr); break;
+            handle_submit_sm(hdr, body); break;
         case smpp::ENQUIRE_LINK_RESP:
             handle_enquire_link_resp(hdr); break;
         default:
@@ -179,12 +182,27 @@ void SmppSession::handle_enquire_link(const smpp::Header& hdr)
     send_pdu(smpp::make_response(smpp::ENQUIRE_LINK_RESP, smpp::ESME_ROK, hdr.sequence_number));
 }
 
-void SmppSession::handle_submit_sm(const smpp::Header& hdr)
+void SmppSession::handle_submit_sm(const smpp::Header& hdr, const std::vector<uint8_t>&)
 {
-    std::lock_guard<std::mutex> lk(state_mutex_);
-    uint32_t status = (state_ == SessionState::BOUND_TX || state_ == SessionState::BOUND_TRX)
-        ? smpp::ESME_ROK : smpp::ESME_RINVBNDSTS;
-    send_pdu(smpp::make_response(smpp::SUBMIT_SM_RESP, status, hdr.sequence_number));
+    uint32_t status;
+    std::string msg_id;
+    {
+        std::lock_guard<std::mutex> lk(state_mutex_);
+        status = (state_ == SessionState::BOUND_TX || state_ == SessionState::BOUND_TRX)
+            ? smpp::ESME_ROK : smpp::ESME_RINVBNDSTS;
+    }
+    if (status == smpp::ESME_ROK) msg_id = next_message_id();
+    send_pdu(smpp::make_response(smpp::SUBMIT_SM_RESP, status, hdr.sequence_number, msg_id));
+    if (!msg_id.empty())
+        spdlog::debug("[SmppSession] submit_sm accepted msg_id={} uuid={}", msg_id, uuid_);
+}
+
+std::string SmppSession::next_message_id()
+{
+    uint32_t seq = msg_seq_.fetch_add(1, std::memory_order_relaxed) + 1;
+    std::ostringstream oss;
+    oss << msg_id_prefix_ << std::hex << std::setw(8) << std::setfill('0') << seq;
+    return oss.str();
 }
 
 void SmppSession::send_pdu(std::vector<uint8_t> pdu)

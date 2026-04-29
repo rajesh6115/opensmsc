@@ -230,3 +230,31 @@ TEST_F(SmppIntegrationTest, SubmitSmBeforeBindIsRejected) {
     EXPECT_EQ(smpp::read_u32(resp.data()+4), smpp::SUBMIT_SM_RESP);
     EXPECT_NE(smpp::read_u32(resp.data()+8), smpp::ESME_ROK);
 }
+
+TEST_F(SmppIntegrationTest, SubmitSmRespContainsMessageId) {
+    // Bind first
+    write_pdu(make_bind_tx("esme1", "secret1", 1));
+    auto bind_resp = read_pdu();
+    ASSERT_EQ(smpp::read_u32(bind_resp.data()+8), smpp::ESME_ROK);
+
+    // Submit SM — response body must contain a non-empty message_id C-string
+    write_pdu(make_submit_sm(2));
+    auto resp = read_pdu();
+    ASSERT_GE(resp.size(), 16u);
+    EXPECT_EQ(smpp::read_u32(resp.data()+4), smpp::SUBMIT_SM_RESP);
+    EXPECT_EQ(smpp::read_u32(resp.data()+8), smpp::ESME_ROK);
+
+    // Body (offset 16) must be a non-empty null-terminated message_id
+    ASSERT_GT(resp.size(), 17u) << "submit_sm_resp body (message_id) is missing";
+    size_t off = 16;
+    std::string msg_id = smpp::read_cstr(resp, off);
+    EXPECT_FALSE(msg_id.empty()) << "message_id must be non-empty";
+
+    // A second submit should produce a different message_id (uniqueness)
+    write_pdu(make_submit_sm(3));
+    auto resp2 = read_pdu();
+    ASSERT_GT(resp2.size(), 17u);
+    size_t off2 = 16;
+    std::string msg_id2 = smpp::read_cstr(resp2, off2);
+    EXPECT_NE(msg_id, msg_id2) << "consecutive message_ids must be unique";
+}
