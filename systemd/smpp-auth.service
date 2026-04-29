@@ -1,0 +1,22 @@
+[Unit]
+Description=SMPP Authentication Service
+After=dbus.service
+Requires=dbus.service
+
+[Service]
+Type=simple
+User=smpp-auth
+Group=smpp-auth
+ExecStart=/usr/local/bin/smpp_auth
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=5s
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadOnlyPaths=/etc/smpp-server
+ReadWritePaths=/var/log/smpp
+
+[Install]
+WantedBy=multi-user.target

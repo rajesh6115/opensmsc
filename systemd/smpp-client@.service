@@ -1,0 +1,27 @@
+[Unit]
+Description=SMPP Client Session %i
+After=dbus.service smpp-server.service
+Requires=dbus.service
+# Transient units are launched by smpp-server via systemd-run; this template
+# exists so resource limits and security hardening are inherited automatically.
+
+[Service]
+Type=simple
+User=smpp-client
+Group=smpp-client
+# %i expands to the UUID passed via systemd-run --unit=smpp-client-<uuid>
+ExecStart=/usr/local/bin/smpp_client_handler --uuid=%i
+Restart=no
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+# Resource limits: one session process shouldn't starve the host
+LimitNOFILE=256
+TasksMax=4
+MemoryMax=64M
+CPUQuota=25%

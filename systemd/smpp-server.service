@@ -1,0 +1,19 @@
+[Unit]
+Description=SMPP Server (connection acceptor)
+After=network.target dbus.service smpp-auth.service
+Requires=dbus.service smpp-auth.service
+
+[Service]
+Type=simple
+User=smpp-server
+Group=smpp-server
+ExecStart=/usr/local/bin/smpp_server
+Restart=on-failure
+RestartSec=5s
+
+# Allow smpp_server to launch transient systemd units for each client session
+AmbientCapabilities=
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=multi-user.target
