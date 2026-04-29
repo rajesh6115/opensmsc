@@ -15,7 +15,9 @@ SmppSession::SmppSession(asio::io_context&   io_ctx,
                          sdbus::IObject&     dbus_obj,
                          sdbus::IConnection& dbus_conn,
                          const std::string&  server_svc,
-                         const std::string&  auth_svc)
+                         const std::string&  auth_svc,
+                         unsigned            enquire_link_interval_sec,
+                         unsigned            enquire_link_timeout_sec)
     : IClientHandler_adaptor(dbus_obj)
     , socket_(io_ctx, socket_fd)
     , uuid_(uuid)
@@ -23,13 +25,21 @@ SmppSession::SmppSession(asio::io_context&   io_ctx,
     , dbus_conn_(dbus_conn)
     , server_svc_(server_svc)
     , auth_svc_(auth_svc)
+    , el_interval_sec_(enquire_link_interval_sec)
+    , el_timeout_sec_(enquire_link_timeout_sec)
+    , el_timer_(io_ctx)
+    , el_timeout_timer_(io_ctx)
     , header_buf_(16)
 {
     server_proxy_ = sdbus::createProxy(dbus_conn_, server_svc_, ISERVER_PATH);
     spdlog::info("[SmppSession] created uuid={} ip={}", uuid_, client_ip_);
 }
 
-void SmppSession::start() { read_header(); }
+void SmppSession::start()
+{
+    read_header();
+    if (el_interval_sec_ > 0) schedule_enquire_link();
+}
 
 std::tuple<std::string,std::string,std::string,std::string,uint64_t>
 SmppSession::GetSessionInfo()
@@ -99,6 +109,8 @@ void SmppSession::dispatch(const smpp::Header& hdr, const std::vector<uint8_t>& 
             handle_enquire_link(hdr); break;
         case smpp::SUBMIT_SM:
             handle_submit_sm(hdr); break;
+        case smpp::ENQUIRE_LINK_RESP:
+            handle_enquire_link_resp(hdr); break;
         default:
             send_pdu(smpp::make_response(smpp::GENERIC_NACK,
                 smpp::ESME_RINVCMDID, hdr.sequence_number));
@@ -211,4 +223,54 @@ void SmppSession::update_session_details()
     } catch (const std::exception& e) {
         spdlog::warn("[SmppSession] UpdateSessionDetails: {}", e.what());
     }
+}
+
+// ── Enquire-link keepalive ────────────────────────────────────────────────────
+
+void SmppSession::schedule_enquire_link()
+{
+    el_timer_.expires_after(std::chrono::seconds(el_interval_sec_));
+    el_timer_.async_wait([this](const asio::error_code& ec){
+        on_enquire_link_timer(ec);
+    });
+}
+
+void SmppSession::on_enquire_link_timer(const asio::error_code& ec)
+{
+    if (ec || el_pending_) return;
+    {
+        std::lock_guard<std::mutex> lk(state_mutex_);
+        if (state_ == SessionState::UNBOUND) return;
+    }
+    el_seq_ = (el_seq_ == 0) ? 0x10000000u : el_seq_ + 1;
+    el_pending_ = true;
+    send_pdu(smpp::make_response(smpp::ENQUIRE_LINK, smpp::ESME_ROK, el_seq_));
+    spdlog::debug("[SmppSession] sent enquire_link seq={}", el_seq_);
+    arm_enquire_link_timeout();
+}
+
+void SmppSession::arm_enquire_link_timeout()
+{
+    el_timeout_timer_.expires_after(std::chrono::seconds(el_timeout_sec_));
+    el_timeout_timer_.async_wait([this](const asio::error_code& ec){
+        on_enquire_link_timeout(ec);
+    });
+}
+
+void SmppSession::handle_enquire_link_resp(const smpp::Header& hdr)
+{
+    if (hdr.sequence_number == el_seq_ && el_pending_) {
+        el_pending_ = false;
+        el_timeout_timer_.cancel();
+        spdlog::debug("[SmppSession] enquire_link_resp received seq={}", hdr.sequence_number);
+        schedule_enquire_link();
+    }
+}
+
+void SmppSession::on_enquire_link_timeout(const asio::error_code& ec)
+{
+    if (ec) return;  // cancelled
+    if (!el_pending_) return;
+    spdlog::warn("[SmppSession] enquire_link timeout uuid={}", uuid_);
+    do_disconnect("enquire_link timeout");
 }

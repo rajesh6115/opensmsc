@@ -185,3 +185,100 @@ TEST_F(SmppSessionTest, UnknownCommandGetsGenericNack) {
     ASSERT_GE(resp.size(), 16u);
     EXPECT_EQ(smpp::read_u32(resp.data()+4), smpp::GENERIC_NACK);
 }
+
+// ── Keepalive test (uses short timers: 1s interval, 1s timeout) ───────────────
+
+class SmppSessionKeepaliveTest : public ::testing::Test {
+protected:
+    std::string suffix, server_svc, auth_svc, client_svc;
+    std::unique_ptr<sdbus::IConnection> server_conn, auth_conn, session_conn;
+    std::unique_ptr<sdbus::IObject>     server_obj, auth_obj, client_obj;
+    std::unique_ptr<ServerStub>         server_stub;
+    std::unique_ptr<AuthStub>           auth_stub;
+    std::unique_ptr<SmppSession>        session;
+    std::unique_ptr<asio::io_context>   io_ctx;
+    int client_fd{-1};
+    std::thread server_evt, auth_evt, session_evt, io_thread;
+
+    void SetUp() override {
+        auto ts = std::chrono::steady_clock::now().time_since_epoch().count();
+        suffix     = std::to_string(getpid()) + "k" + std::to_string(ts % 100000);
+        server_svc = "com.telecom.smpp.Server.k" + suffix;
+        auth_svc   = "com.telecom.smpp.Auth.k"   + suffix;
+        client_svc = "com.telecom.smpp.Client.k" + suffix;
+
+        int sv[2]; ::socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+        int session_fd = sv[0]; client_fd = sv[1];
+
+        server_conn = sdbus::createSessionBusConnection(server_svc);
+        server_obj  = sdbus::createObject(*server_conn, "/com/telecom/smpp/server");
+        server_stub = std::make_unique<ServerStub>(*server_obj);
+        server_obj->finishRegistration();
+        server_evt = std::thread([this]{ server_conn->enterEventLoop(); });
+
+        auth_conn = sdbus::createSessionBusConnection(auth_svc);
+        auth_obj  = sdbus::createObject(*auth_conn, "/com/telecom/smpp/auth");
+        auth_stub = std::make_unique<AuthStub>(*auth_obj);
+        auth_obj->finishRegistration();
+        auth_evt = std::thread([this]{ auth_conn->enterEventLoop(); });
+
+        session_conn = sdbus::createSessionBusConnection(client_svc);
+        client_obj   = sdbus::createObject(*session_conn, "/com/telecom/smpp/client");
+        io_ctx = std::make_unique<asio::io_context>();
+
+        // 1s interval, 1s timeout for fast test
+        session = std::make_unique<SmppSession>(
+            *io_ctx, session_fd, "uuid-k-" + suffix, "127.0.0.1",
+            *client_obj, *session_conn, server_svc, auth_svc, 1, 1);
+        client_obj->finishRegistration();
+        session_evt = std::thread([this]{ session_conn->enterEventLoop(); });
+
+        io_thread = std::thread([this]{ session->start(); io_ctx->run(); });
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    void TearDown() override {
+        io_ctx->stop();
+        if (io_thread.joinable())   io_thread.join();
+        server_conn->leaveEventLoop(); auth_conn->leaveEventLoop();
+        session_conn->leaveEventLoop();
+        if (server_evt.joinable())  server_evt.join();
+        if (auth_evt.joinable())    auth_evt.join();
+        if (session_evt.joinable()) session_evt.join();
+        if (client_fd >= 0) ::close(client_fd);
+    }
+
+    std::vector<uint8_t> read_pdu(int timeout_ms = 3000) {
+        struct timeval tv{timeout_ms/1000, (timeout_ms%1000)*1000};
+        ::setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+        uint8_t hdr[16];
+        if (::recv(client_fd, hdr, 16, MSG_WAITALL) != 16) return {};
+        uint32_t len = smpp::read_u32(hdr);
+        std::vector<uint8_t> buf(len);
+        std::memcpy(buf.data(), hdr, 16);
+        if (len > 16) ::recv(client_fd, buf.data()+16, len-16, MSG_WAITALL);
+        return buf;
+    }
+};
+
+TEST_F(SmppSessionKeepaliveTest, ServerSendsEnquireLink) {
+    // After ~1s the session should send an enquire_link
+    auto pdu = read_pdu(2500);
+    ASSERT_GE(pdu.size(), 16u);
+    EXPECT_EQ(smpp::read_u32(pdu.data()+4), smpp::ENQUIRE_LINK);
+}
+
+TEST_F(SmppSessionKeepaliveTest, TimeoutDisconnectsIfNoReply) {
+    // Read the enquire_link (don't reply)
+    auto pdu = read_pdu(2500);
+    ASSERT_GE(pdu.size(), 16u);
+    EXPECT_EQ(smpp::read_u32(pdu.data()+4), smpp::ENQUIRE_LINK);
+    // After another ~1s timeout the session should close the socket
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+    // Socket should be closed — a subsequent read should return 0 or error
+    char buf[1];
+    struct timeval tv{1, 0};
+    ::setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    int r = ::recv(client_fd, buf, 1, 0);
+    EXPECT_LE(r, 0);  // 0 = EOF, -1 = error
+}

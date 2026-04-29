@@ -28,6 +28,7 @@ inline const char* state_name(SessionState s) {
 
 class SmppSession : public com::telecom::smpp::IClientHandler_adaptor {
 public:
+    // enquire_link_interval_sec=0 disables the keepalive (useful in tests)
     SmppSession(asio::io_context&   io_ctx,
                 int                 socket_fd,
                 const std::string&  uuid,
@@ -35,7 +36,9 @@ public:
                 sdbus::IObject&     dbus_obj,
                 sdbus::IConnection& dbus_conn,
                 const std::string&  server_svc,
-                const std::string&  auth_svc = "com.telecom.smpp.Auth");
+                const std::string&  auth_svc = "com.telecom.smpp.Auth",
+                unsigned            enquire_link_interval_sec = 60,
+                unsigned            enquire_link_timeout_sec  = 10);
 
     void start();
 
@@ -60,6 +63,13 @@ private:
     void do_disconnect(const std::string& reason);
     void update_session_details();
 
+    // keepalive
+    void schedule_enquire_link();
+    void on_enquire_link_timer(const asio::error_code& ec);
+    void handle_enquire_link_resp(const smpp::Header& hdr);
+    void arm_enquire_link_timeout();
+    void on_enquire_link_timeout(const asio::error_code& ec);
+
     asio::posix::stream_descriptor      socket_;
     std::string                          uuid_;
     std::string                          client_ip_;
@@ -72,6 +82,14 @@ private:
     std::unique_ptr<sdbus::IProxy>       server_proxy_;
     std::string                          server_svc_;
     std::string                          auth_svc_;
+
+    // keepalive timers
+    unsigned                             el_interval_sec_;
+    unsigned                             el_timeout_sec_;
+    uint32_t                             el_seq_{0};
+    bool                                 el_pending_{false};
+    asio::steady_timer                   el_timer_;
+    asio::steady_timer                   el_timeout_timer_;
 
     std::vector<uint8_t>                 header_buf_;
 };
