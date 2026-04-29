@@ -72,6 +72,51 @@ inline std::string read_cstr(const std::vector<uint8_t>& buf, size_t& off, size_
     return s;
 }
 
+// Parsed fields from a submit_sm body (SMPP 3.4 §4.4.1).
+struct SubmitSm {
+    std::string service_type;
+    uint8_t     src_ton{0}, src_npi{0};
+    std::string src_addr;
+    uint8_t     dst_ton{0}, dst_npi{0};
+    std::string dst_addr;
+    uint8_t     esm_class{0}, protocol_id{0}, priority_flag{0};
+    std::string schedule_delivery_time;
+    std::string validity_period;
+    uint8_t     registered_delivery{0}, replace_if_present{0};
+    uint8_t     data_coding{0}, sm_default_msg_id{0};
+    std::string short_message;  // raw bytes as string (may be binary)
+};
+
+inline SubmitSm parse_submit_sm(const std::vector<uint8_t>& body)
+{
+    SubmitSm sm;
+    if (body.empty()) return sm;
+    size_t off = 0;
+    sm.service_type = read_cstr(body, off);
+    if (off < body.size()) sm.src_ton = body[off++];
+    if (off < body.size()) sm.src_npi = body[off++];
+    sm.src_addr     = read_cstr(body, off);
+    if (off < body.size()) sm.dst_ton = body[off++];
+    if (off < body.size()) sm.dst_npi = body[off++];
+    sm.dst_addr     = read_cstr(body, off);
+    if (off < body.size()) sm.esm_class    = body[off++];
+    if (off < body.size()) sm.protocol_id  = body[off++];
+    if (off < body.size()) sm.priority_flag= body[off++];
+    sm.schedule_delivery_time = read_cstr(body, off);
+    sm.validity_period        = read_cstr(body, off);
+    if (off < body.size()) sm.registered_delivery  = body[off++];
+    if (off < body.size()) sm.replace_if_present    = body[off++];
+    if (off < body.size()) sm.data_coding           = body[off++];
+    if (off < body.size()) sm.sm_default_msg_id     = body[off++];
+    if (off < body.size()) {
+        uint8_t sm_len = body[off++];
+        size_t  avail  = std::min<size_t>(sm_len, body.size() - off);
+        sm.short_message.assign(reinterpret_cast<const char*>(body.data() + off), avail);
+        off += avail;
+    }
+    return sm;
+}
+
 // Build a minimal header-only response (no body or just system_id).
 inline std::vector<uint8_t> make_response(uint32_t command_id,
                                            uint32_t command_status,

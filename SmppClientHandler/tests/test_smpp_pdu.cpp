@@ -42,3 +42,42 @@ TEST(SmppPdu, ReadCstr) {
     EXPECT_EQ(off, 6u);
     EXPECT_EQ(smpp::read_cstr(buf, off), "pass");
 }
+
+TEST(SmppPdu, ParseSubmitSmBody) {
+    // Build a minimal submit_sm body per SMPP 3.4 §4.4.1
+    std::vector<uint8_t> body;
+    // service_type ""
+    body.push_back(0);
+    // src_ton=1, src_npi=1, src_addr="441234"
+    body.push_back(1); body.push_back(1);
+    for (char c : std::string("441234")) body.push_back(c); body.push_back(0);
+    // dst_ton=0, dst_npi=1, dst_addr="esme1"
+    body.push_back(0); body.push_back(1);
+    for (char c : std::string("esme1")) body.push_back(c); body.push_back(0);
+    // esm_class=0, protocol_id=0, priority_flag=0
+    body.push_back(0); body.push_back(0); body.push_back(0);
+    // schedule_delivery_time="", validity_period=""
+    body.push_back(0); body.push_back(0);
+    // registered_delivery=0, replace_if_present=0, data_coding=0, sm_default_msg_id=0
+    body.push_back(0); body.push_back(0); body.push_back(0); body.push_back(0);
+    // sm_length=5, short_message="Hello"
+    body.push_back(5);
+    for (char c : std::string("Hello")) body.push_back(c);
+
+    auto sm = smpp::parse_submit_sm(body);
+    EXPECT_EQ(sm.src_ton,       1u);
+    EXPECT_EQ(sm.src_npi,       1u);
+    EXPECT_EQ(sm.src_addr,      "441234");
+    EXPECT_EQ(sm.dst_ton,       0u);
+    EXPECT_EQ(sm.dst_npi,       1u);
+    EXPECT_EQ(sm.dst_addr,      "esme1");
+    EXPECT_EQ(sm.short_message, "Hello");
+}
+
+TEST(SmppPdu, ParseSubmitSmEmptyBody) {
+    // Must not crash on empty body
+    std::vector<uint8_t> body;
+    auto sm = smpp::parse_submit_sm(body);
+    EXPECT_TRUE(sm.src_addr.empty());
+    EXPECT_TRUE(sm.short_message.empty());
+}

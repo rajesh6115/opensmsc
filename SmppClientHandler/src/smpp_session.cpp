@@ -188,7 +188,7 @@ void SmppSession::handle_enquire_link(const smpp::Header& hdr)
     send_pdu(smpp::make_response(smpp::ENQUIRE_LINK_RESP, smpp::ESME_ROK, hdr.sequence_number));
 }
 
-void SmppSession::handle_submit_sm(const smpp::Header& hdr, const std::vector<uint8_t>&)
+void SmppSession::handle_submit_sm(const smpp::Header& hdr, const std::vector<uint8_t>& body)
 {
     uint32_t status;
     std::string msg_id;
@@ -201,13 +201,18 @@ void SmppSession::handle_submit_sm(const smpp::Header& hdr, const std::vector<ui
         spdlog::warn("[SmppSession] throttled uuid={}", uuid_);
         status = smpp::ESME_RTHROTTLED;
     }
-    if (status == smpp::ESME_ROK) msg_id = next_message_id();
+    smpp::SubmitSm sm;
+    if (status == smpp::ESME_ROK) {
+        sm     = smpp::parse_submit_sm(body);
+        msg_id = next_message_id();
+    }
     send_pdu(smpp::make_response(smpp::SUBMIT_SM_RESP, status, hdr.sequence_number, msg_id));
     if (!msg_id.empty()) {
-        spdlog::debug("[SmppSession] submit_sm accepted msg_id={} uuid={}", msg_id, uuid_);
+        spdlog::info("[SmppSession] submit_sm src={} dst={} len={} msg_id={} uuid={}",
+                     sm.src_addr, sm.dst_addr, sm.short_message.size(), msg_id, uuid_);
         try {
             server_proxy_->callMethod("RouteMessage").onInterface("com.telecom.smpp.IServer")
-                .withArguments(std::string{}, system_id_, std::string{}, msg_id);
+                .withArguments(sm.src_addr, sm.dst_addr, sm.short_message, msg_id);
         } catch (const std::exception& e) {
             spdlog::warn("[SmppSession] RouteMessage failed: {}", e.what());
         }

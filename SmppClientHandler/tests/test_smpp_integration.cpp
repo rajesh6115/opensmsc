@@ -30,8 +30,15 @@ struct IntegServerStub : public com::telecom::smpp::IServer_adaptor {
     GetAllSessions() override { return {}; }
     void SetMaxConnectionsPerIp(const std::string&, const uint32_t&) override {}
     void DisconnectAll(const std::string&, const std::string&) override {}
-    std::string RouteMessage(const std::string&, const std::string&,
-                             const std::string&, const std::string&) override { return {}; }
+    // Capture last RouteMessage call for assertions
+    std::string routed_src, routed_dst, routed_msg, routed_id;
+    std::atomic<int> route_count{0};
+    std::string RouteMessage(const std::string& src, const std::string& dst,
+                             const std::string& msg, const std::string& id) override {
+        routed_src = src; routed_dst = dst; routed_msg = msg; routed_id = id;
+        ++route_count;
+        return {};
+    }
 };
 
 struct IntegAuthStub : public com::telecom::smpp::IAuth_adaptor {
@@ -176,6 +183,31 @@ protected:
         std::memcpy(pdu.data()+16, body.data(), body.size());
         return pdu;
     }
+
+    // submit_sm with explicit src/dst/message fields
+    std::vector<uint8_t> make_submit_sm_full(const std::string& src, const std::string& dst,
+                                              const std::string& msg, uint32_t seq = 2) {
+        std::vector<uint8_t> body;
+        body.push_back(0);                                  // service_type ""
+        body.push_back(0); body.push_back(0);               // src_ton, src_npi
+        for (char c : src) body.push_back(c); body.push_back(0);
+        body.push_back(0); body.push_back(0);               // dst_ton, dst_npi
+        for (char c : dst) body.push_back(c); body.push_back(0);
+        body.push_back(0); body.push_back(0); body.push_back(0); // esm, pid, prio
+        body.push_back(0); body.push_back(0);               // sched, valid
+        body.push_back(0); body.push_back(0); body.push_back(0); body.push_back(0);
+        body.push_back(static_cast<uint8_t>(msg.size()));
+        for (char c : msg) body.push_back(static_cast<uint8_t>(c));
+
+        uint32_t total = 16 + static_cast<uint32_t>(body.size());
+        std::vector<uint8_t> pdu(total);
+        smpp::write_u32(pdu.data(),    total);
+        smpp::write_u32(pdu.data()+4,  smpp::SUBMIT_SM);
+        smpp::write_u32(pdu.data()+8,  0);
+        smpp::write_u32(pdu.data()+12, seq);
+        std::memcpy(pdu.data()+16, body.data(), body.size());
+        return pdu;
+    }
 };
 
 // ── Integration test: full session lifecycle ───────────────────────────────────
@@ -259,4 +291,25 @@ TEST_F(SmppIntegrationTest, SubmitSmRespContainsMessageId) {
     size_t off2 = 16;
     std::string msg_id2 = smpp::read_cstr(resp2, off2);
     EXPECT_NE(msg_id, msg_id2) << "consecutive message_ids must be unique";
+}
+
+TEST_F(SmppIntegrationTest, SubmitSmBodyParsedAndRoutedCorrectly) {
+    // Bind as transmitter
+    write_pdu(make_bind_tx("esme1", "secret1", 1));
+    auto bind_resp = read_pdu();
+    ASSERT_EQ(smpp::read_u32(bind_resp.data()+8), smpp::ESME_ROK);
+
+    // Submit with specific src/dst/message
+    write_pdu(make_submit_sm_full("441234567890", "esme1-dst", "Test message", 2));
+    auto resp = read_pdu();
+    ASSERT_GE(resp.size(), 16u);
+    EXPECT_EQ(smpp::read_u32(resp.data()+8), smpp::ESME_ROK);
+
+    // Give the async RouteMessage call time to reach the stub
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    EXPECT_EQ(server_stub->route_count.load(), 1);
+    EXPECT_EQ(server_stub->routed_src, "441234567890");
+    EXPECT_EQ(server_stub->routed_dst, "esme1-dst");
+    EXPECT_EQ(server_stub->routed_msg, "Test message");
+    EXPECT_FALSE(server_stub->routed_id.empty());
 }
