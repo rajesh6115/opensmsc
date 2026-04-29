@@ -31,6 +31,7 @@ constexpr uint32_t ESME_RALYBND     = 0x00000005; // already bound
 constexpr uint32_t ESME_RINVPASWD   = 0x0000000E;
 constexpr uint32_t ESME_RINVSYSID   = 0x0000000F;
 constexpr uint32_t ESME_RINVCMDID   = 0x00000003; // invalid command id
+constexpr uint32_t ESME_RTHROTTLED  = 0x00000058; // throttling error
 
 // ── PDU header ────────────────────────────────────────────────────────────────
 struct Header {

@@ -19,7 +19,8 @@ SmppSession::SmppSession(asio::io_context&   io_ctx,
                          const std::string&  server_svc,
                          const std::string&  auth_svc,
                          unsigned            enquire_link_interval_sec,
-                         unsigned            enquire_link_timeout_sec)
+                         unsigned            enquire_link_timeout_sec,
+                         unsigned            max_submit_per_sec)
     : IClientHandler_adaptor(dbus_obj)
     , socket_(io_ctx, socket_fd)
     , uuid_(uuid)
@@ -31,6 +32,9 @@ SmppSession::SmppSession(asio::io_context&   io_ctx,
     , el_timeout_sec_(enquire_link_timeout_sec)
     , el_timer_(io_ctx)
     , el_timeout_timer_(io_ctx)
+    , max_submit_per_sec_(max_submit_per_sec)
+    , tb_tokens_(static_cast<double>(max_submit_per_sec))
+    , tb_last_refill_(std::chrono::steady_clock::now())
     , msg_id_prefix_(uuid.size() >= 8 ? uuid.substr(0, 8) : uuid)
     , header_buf_(16)
 {
@@ -193,6 +197,10 @@ void SmppSession::handle_submit_sm(const smpp::Header& hdr, const std::vector<ui
         status = (state_ == SessionState::BOUND_TX || state_ == SessionState::BOUND_TRX)
             ? smpp::ESME_ROK : smpp::ESME_RINVBNDSTS;
     }
+    if (status == smpp::ESME_ROK && !throttle_check()) {
+        spdlog::warn("[SmppSession] throttled uuid={}", uuid_);
+        status = smpp::ESME_RTHROTTLED;
+    }
     if (status == smpp::ESME_ROK) msg_id = next_message_id();
     send_pdu(smpp::make_response(smpp::SUBMIT_SM_RESP, status, hdr.sequence_number, msg_id));
     if (!msg_id.empty())
@@ -275,6 +283,26 @@ void SmppSession::handle_deliver_sm_resp(const smpp::Header& hdr)
 uint32_t SmppSession::next_deliver_seq()
 {
     return deliver_seq_.fetch_add(1, std::memory_order_relaxed);
+}
+
+bool SmppSession::throttle_check()
+{
+    if (max_submit_per_sec_ == 0) return true;  // unlimited
+
+    auto now = std::chrono::steady_clock::now();
+    double elapsed = std::chrono::duration<double>(now - tb_last_refill_).count();
+    tb_last_refill_ = now;
+
+    // Refill tokens proportional to elapsed time, capped at bucket size
+    tb_tokens_ += elapsed * static_cast<double>(max_submit_per_sec_);
+    if (tb_tokens_ > static_cast<double>(max_submit_per_sec_))
+        tb_tokens_ = static_cast<double>(max_submit_per_sec_);
+
+    if (tb_tokens_ >= 1.0) {
+        tb_tokens_ -= 1.0;
+        return true;
+    }
+    return false;
 }
 
 // ── Enquire-link keepalive ────────────────────────────────────────────────────

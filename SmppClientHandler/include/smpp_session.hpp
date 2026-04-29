@@ -30,6 +30,7 @@ inline const char* state_name(SessionState s) {
 class SmppSession : public com::telecom::smpp::IClientHandler_adaptor {
 public:
     // enquire_link_interval_sec=0 disables the keepalive (useful in tests)
+    // max_submit_per_sec = 0 disables throttling
     SmppSession(asio::io_context&   io_ctx,
                 int                 socket_fd,
                 const std::string&  uuid,
@@ -39,7 +40,8 @@ public:
                 const std::string&  server_svc,
                 const std::string&  auth_svc = "com.telecom.smpp.Auth",
                 unsigned            enquire_link_interval_sec = 60,
-                unsigned            enquire_link_timeout_sec  = 10);
+                unsigned            enquire_link_timeout_sec  = 10,
+                unsigned            max_submit_per_sec        = 0);
 
     void start();
 
@@ -65,6 +67,7 @@ private:
     void handle_deliver_sm_resp(const smpp::Header& hdr);
     std::string next_message_id();
     uint32_t    next_deliver_seq();
+    bool        throttle_check();  // returns true if request should be allowed
 
     void send_pdu(std::vector<uint8_t> pdu);
     void do_disconnect(const std::string& reason);
@@ -100,6 +103,11 @@ private:
 
     std::atomic<uint32_t>                msg_seq_{0};
     std::atomic<uint32_t>                deliver_seq_{0x20000000u};
+
+    // Token-bucket rate limiter for submit_sm
+    unsigned                             max_submit_per_sec_{0};
+    double                               tb_tokens_{0.0};
+    std::chrono::steady_clock::time_point tb_last_refill_{};
     std::string                          msg_id_prefix_;  // first 8 chars of uuid
     std::vector<uint8_t>                 header_buf_;
 };

@@ -111,6 +111,15 @@ target_link_libraries(test_smpp_session PRIVATE
     smpp_session_lib GTest::gtest GTest::gtest_main)
 add_test(NAME SmppSessionTests COMMAND test_smpp_session)
 
+add_executable(test_throttle tests/test_throttle.cpp)
+add_dependencies(test_throttle generate_iclienthandler_dbus)
+target_include_directories(test_throttle PRIVATE
+    include ${SDBUS_CPP_INCLUDE_DIRS} ${SPDLOG_INCLUDE_DIR}
+    ${ISERVER_GEN_DIR} ${IAUTH_GEN_DIR})
+target_link_libraries(test_throttle PRIVATE
+    smpp_session_lib GTest::gtest GTest::gtest_main)
+add_test(NAME ThrottleTests COMMAND test_throttle)
+
 add_executable(test_deliver_sm tests/test_deliver_sm.cpp)
 add_dependencies(test_deliver_sm generate_iclienthandler_dbus)
 target_include_directories(test_deliver_sm PRIVATE
