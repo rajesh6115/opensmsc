@@ -72,6 +72,13 @@ public:
         proxy_->callMethod("DisconnectAll").onInterface(INTERFACE_NAME).withArguments(ip, reason);
     }
 
+    std::string RouteMessage(const std::string& src_addr, const std::string& dst_addr, const std::string& short_message, const std::string& message_id)
+    {
+        std::string result;
+        proxy_->callMethod("RouteMessage").onInterface(INTERFACE_NAME).withArguments(src_addr, dst_addr, short_message, message_id).storeResultsTo(result);
+        return result;
+    }
+
 private:
     sdbus::IProxy* proxy_;
 };

@@ -1,9 +1,14 @@
 #include "smpp_server_service.hpp"
 #include "logger.hpp"
 
+static constexpr const char* ICLIENTHANDLER_IFACE = "com.telecom.smpp.IClientHandler";
+static constexpr const char* ICLIENTHANDLER_PATH  = "/com/telecom/smpp/client";
+
 SmppServerService::SmppServerService(sdbus::IObject&                     obj,
+                                     sdbus::IConnection&                 conn,
                                      std::shared_ptr<ConnectionRegistry> registry)
     : IServer_adaptor(obj)
+    , dbus_conn_(conn)
     , registry_(std::move(registry))
 {}
 
@@ -76,5 +81,56 @@ void SmppServerService::SetMaxConnectionsPerIp(const std::string& /*ip*/, const 
 
 void SmppServerService::DisconnectAll(const std::string& ip, const std::string& reason)
 {
-    LOG_INFO("IServer", "DisconnectAll ip={} reason={} (TODO: proxy IClientHandler)", ip, reason);
+    LOG_INFO("IServer", "DisconnectAll ip={} reason={}", ip, reason);
+    std::vector<std::string> targets;
+    {
+        std::lock_guard<std::mutex> lock(sessions_mutex_);
+        for (const auto& [uuid, info] : sessions_)
+            if (info.client_ip == ip) targets.push_back(uuid);
+    }
+    for (const auto& uuid : targets) {
+        try {
+            const std::string svc = "com.telecom.smpp.Client." + uuid;
+            auto proxy = sdbus::createProxy(dbus_conn_, svc, ICLIENTHANDLER_PATH);
+            proxy->callMethod("Disconnect").onInterface(ICLIENTHANDLER_IFACE)
+                  .withArguments(reason);
+        } catch (const std::exception& e) {
+            LOG_WARN("IServer", "DisconnectAll: uuid={} error={}", uuid, e.what());
+        }
+    }
+}
+
+std::string SmppServerService::RouteMessage(const std::string& src_addr,
+                                            const std::string& dst_addr,
+                                            const std::string& short_message,
+                                            const std::string& message_id)
+{
+    // Find first BOUND_RX or BOUND_TRX session to deliver to
+    std::string target_uuid;
+    {
+        std::lock_guard<std::mutex> lock(sessions_mutex_);
+        for (const auto& [uuid, info] : sessions_) {
+            if (info.state == "BOUND_RX" || info.state == "BOUND_TRX") {
+                target_uuid = uuid;
+                break;
+            }
+        }
+    }
+    if (target_uuid.empty()) {
+        LOG_WARN("IServer", "RouteMessage: no BOUND_RX/TRX session for dst={}", dst_addr);
+        return {};
+    }
+    try {
+        const std::string svc = "com.telecom.smpp.Client." + target_uuid;
+        auto proxy = sdbus::createProxy(dbus_conn_, svc, ICLIENTHANDLER_PATH);
+        uint32_t seq = 0;
+        proxy->callMethod("DeliverSm").onInterface(ICLIENTHANDLER_IFACE)
+              .withArguments(src_addr, dst_addr, short_message)
+              .storeResultsTo(seq);
+        LOG_INFO("IServer", "RouteMessage msg_id={} -> uuid={} seq={}", message_id, target_uuid, seq);
+    } catch (const std::exception& e) {
+        LOG_WARN("IServer", "RouteMessage: DeliverSm to uuid={} failed: {}", target_uuid, e.what());
+        return {};
+    }
+    return target_uuid;
 }

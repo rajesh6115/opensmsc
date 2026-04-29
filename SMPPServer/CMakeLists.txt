@@ -217,6 +217,18 @@ target_compile_options(test_iserver_methods PRIVATE ${SDBUS_CPP_CFLAGS} -Wall -W
 target_link_options(test_iserver_methods PRIVATE ${SDBUS_CPP_LDFLAGS})
 add_test(NAME IServerMethodsTests COMMAND test_iserver_methods)
 
+add_executable(test_route_message
+    tests/test_route_message.cpp
+    src/smpp_server_service.cpp
+    src/connection_registry.cpp
+)
+add_dependencies(test_route_message generate_iserver_dbus)
+target_include_directories(test_route_message PRIVATE include ${SDBUS_CPP_INCLUDE_DIRS} ${SPDLOG_INCLUDE_DIR})
+target_link_libraries(test_route_message PRIVATE GTest::gtest GTest::gtest_main ${SDBUS_CPP_LIBRARIES} ${FMT_LIBRARIES} pthread)
+target_compile_options(test_route_message PRIVATE ${SDBUS_CPP_CFLAGS} -Wall -Wextra)
+target_link_options(test_route_message PRIVATE ${SDBUS_CPP_LDFLAGS})
+add_test(NAME RouteMessageTests COMMAND test_route_message)
+
 message(STATUS "")
 message(STATUS "  ═══════════════════════════════════════════════════════")
 message(STATUS "  simple_smpp_server ${PROJECT_VERSION}")

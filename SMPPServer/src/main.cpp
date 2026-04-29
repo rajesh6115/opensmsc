@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
         // D-Bus setup
         auto dbus_conn = sdbus::createSystemBusConnection(SmppServerService::SERVICE_NAME);
         auto dbus_obj  = sdbus::createObject(*dbus_conn, SmppServerService::OBJ_PATH);
-        SmppServerService svc(*dbus_obj, registry);
+        SmppServerService svc(*dbus_obj, *dbus_conn, registry);
         dbus_obj->finishRegistration();
 
         // D-Bus event loop on a dedicated thread

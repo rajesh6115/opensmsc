@@ -203,8 +203,15 @@ void SmppSession::handle_submit_sm(const smpp::Header& hdr, const std::vector<ui
     }
     if (status == smpp::ESME_ROK) msg_id = next_message_id();
     send_pdu(smpp::make_response(smpp::SUBMIT_SM_RESP, status, hdr.sequence_number, msg_id));
-    if (!msg_id.empty())
+    if (!msg_id.empty()) {
         spdlog::debug("[SmppSession] submit_sm accepted msg_id={} uuid={}", msg_id, uuid_);
+        try {
+            server_proxy_->callMethod("RouteMessage").onInterface("com.telecom.smpp.IServer")
+                .withArguments(std::string{}, system_id_, std::string{}, msg_id);
+        } catch (const std::exception& e) {
+            spdlog::warn("[SmppSession] RouteMessage failed: {}", e.what());
+        }
+    }
 }
 
 std::string SmppSession::next_message_id()

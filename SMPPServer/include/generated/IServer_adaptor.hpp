@@ -29,6 +29,7 @@ protected:
         object_->registerMethod("GetAllSessions").onInterface(INTERFACE_NAME).withOutputParamNames("sessions").implementedAs([this](){ return this->GetAllSessions(); });
         object_->registerMethod("SetMaxConnectionsPerIp").onInterface(INTERFACE_NAME).withInputParamNames("ip", "max").implementedAs([this](const std::string& ip, const uint32_t& max){ return this->SetMaxConnectionsPerIp(ip, max); });
         object_->registerMethod("DisconnectAll").onInterface(INTERFACE_NAME).withInputParamNames("ip", "reason").implementedAs([this](const std::string& ip, const std::string& reason){ return this->DisconnectAll(ip, reason); });
+        object_->registerMethod("RouteMessage").onInterface(INTERFACE_NAME).withInputParamNames("src_addr", "dst_addr", "short_message", "message_id").withOutputParamNames("routed_to_uuid").implementedAs([this](const std::string& src_addr, const std::string& dst_addr, const std::string& short_message, const std::string& message_id){ return this->RouteMessage(src_addr, dst_addr, short_message, message_id); });
         object_->registerSignal("SessionStarted").onInterface(INTERFACE_NAME).withParameters<std::string, std::string>("session_id", "client_ip");
     }
 
@@ -52,6 +53,7 @@ private:
     virtual std::vector<sdbus::Struct<std::string, std::string, std::string, std::string>> GetAllSessions() = 0;
     virtual void SetMaxConnectionsPerIp(const std::string& ip, const uint32_t& max) = 0;
     virtual void DisconnectAll(const std::string& ip, const std::string& reason) = 0;
+    virtual std::string RouteMessage(const std::string& src_addr, const std::string& dst_addr, const std::string& short_message, const std::string& message_id) = 0;
 
 private:
     sdbus::IObject* object_;

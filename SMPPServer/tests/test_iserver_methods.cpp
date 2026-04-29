@@ -23,7 +23,7 @@ protected:
         conn     = sdbus::createSessionBusConnection(SVC);
         obj      = sdbus::createObject(*conn, PATH);
         registry = std::make_shared<ConnectionRegistry>(5);
-        svc      = std::make_unique<SmppServerService>(*obj, registry);
+        svc      = std::make_unique<SmppServerService>(*obj, *conn, registry);
         obj->finishRegistration();
         event_thread = std::thread([this]{ conn->enterEventLoopAsync(); });
         std::this_thread::sleep_for(std::chrono::milliseconds(100));

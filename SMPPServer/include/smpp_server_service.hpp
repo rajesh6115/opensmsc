@@ -24,6 +24,7 @@ public:
     static constexpr const char* OBJ_PATH     = "/com/telecom/smpp/server";
 
     SmppServerService(sdbus::IObject&                      obj,
+                      sdbus::IConnection&                  conn,
                       std::shared_ptr<ConnectionRegistry>  registry);
 
     // Called by TcpServer on each accepted connection; emits SessionStarted signal.
@@ -42,7 +43,12 @@ private:
         GetAllSessions() override;
     void SetMaxConnectionsPerIp(const std::string& ip, const uint32_t& max) override;
     void DisconnectAll(const std::string& ip, const std::string& reason) override;
+    std::string RouteMessage(const std::string& src_addr,
+                             const std::string& dst_addr,
+                             const std::string& short_message,
+                             const std::string& message_id) override;
 
+    sdbus::IConnection&                  dbus_conn_;
     std::shared_ptr<ConnectionRegistry>  registry_;
     mutable std::mutex                   sessions_mutex_;
     std::map<std::string, SessionInfo>   sessions_;

@@ -42,6 +42,17 @@
       <arg name="reason" type="s" direction="in"/>
     </method>
 
+    <!-- Route an MT message to a BOUND_RX or BOUND_TRX session.
+         SmppClientHandler calls this on submit_sm success.
+         Returns the UUID of the session the message was delivered to, or empty. -->
+    <method name="RouteMessage">
+      <arg name="src_addr"      type="s" direction="in"/>
+      <arg name="dst_addr"      type="s" direction="in"/>
+      <arg name="short_message" type="s" direction="in"/>
+      <arg name="message_id"    type="s" direction="in"/>
+      <arg name="routed_to_uuid" type="s" direction="out"/>
+    </method>
+
     <!-- Emitted when a new SmppClientHandler process has been launched. -->
     <signal name="SessionStarted">
       <arg name="session_id" type="s"/>

@@ -22,6 +22,8 @@ private:
     std::vector<sdbus::Struct<std::string,std::string,std::string,std::string>> GetAllSessions() override { return {}; }
     void SetMaxConnectionsPerIp(const std::string&, const uint32_t&) override {}
     void DisconnectAll(const std::string&, const std::string&) override {}
+    std::string RouteMessage(const std::string&, const std::string&,
+                             const std::string&, const std::string&) override { return {}; }
 };
 
 static constexpr const char* SERVICE  = "com.telecom.smpp.Server";

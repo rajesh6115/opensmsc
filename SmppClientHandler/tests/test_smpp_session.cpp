@@ -25,6 +25,8 @@ struct ServerStub : public com::telecom::smpp::IServer_adaptor {
     GetAllSessions() override { return {}; }
     void SetMaxConnectionsPerIp(const std::string&, const uint32_t&) override {}
     void DisconnectAll(const std::string&, const std::string&) override {}
+    std::string RouteMessage(const std::string&, const std::string&,
+                             const std::string&, const std::string&) override { return {}; }
 };
 
 struct AuthStub : public com::telecom::smpp::IAuth_adaptor {
