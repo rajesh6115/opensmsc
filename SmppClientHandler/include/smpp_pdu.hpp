@@ -20,6 +20,8 @@ constexpr uint32_t ENQUIRE_LINK          = 0x00000015;
 constexpr uint32_t ENQUIRE_LINK_RESP     = 0x80000015;
 constexpr uint32_t SUBMIT_SM             = 0x00000004;
 constexpr uint32_t SUBMIT_SM_RESP        = 0x80000004;
+constexpr uint32_t DELIVER_SM            = 0x00000005;
+constexpr uint32_t DELIVER_SM_RESP       = 0x80000005;
 constexpr uint32_t GENERIC_NACK          = 0x80000000;
 
 // ── Status codes ─────────────────────────────────────────────────────────────
@@ -85,6 +87,45 @@ inline std::vector<uint8_t> make_response(uint32_t command_id,
     if (!system_id.empty()) {
         std::memcpy(pdu.data() + 16, system_id.c_str(), system_id.size() + 1);
     }
+    return pdu;
+}
+
+// Build a deliver_sm PDU (SMSC→ESME MO delivery).
+// All address fields are C-octet strings; short_message is raw bytes.
+inline std::vector<uint8_t> make_deliver_sm(
+    uint32_t           sequence_number,
+    const std::string& src_addr,
+    const std::string& dst_addr,
+    const std::string& short_message,
+    uint8_t            src_ton = 0, uint8_t src_npi = 0,
+    uint8_t            dst_ton = 0, uint8_t dst_npi = 0)
+{
+    std::vector<uint8_t> body;
+    // service_type (empty)
+    body.push_back(0);
+    body.push_back(src_ton); body.push_back(src_npi);
+    for (char c : src_addr) body.push_back(static_cast<uint8_t>(c));
+    body.push_back(0);
+    body.push_back(dst_ton); body.push_back(dst_npi);
+    for (char c : dst_addr) body.push_back(static_cast<uint8_t>(c));
+    body.push_back(0);
+    // esm_class=0, protocol_id=0, priority_flag=0
+    body.push_back(0); body.push_back(0); body.push_back(0);
+    // schedule_delivery_time="", validity_period=""
+    body.push_back(0); body.push_back(0);
+    // registered_delivery=0, replace_if_present=0, data_coding=0, sm_default_msg_id=0
+    body.push_back(0); body.push_back(0); body.push_back(0); body.push_back(0);
+    // sm_length + short_message
+    body.push_back(static_cast<uint8_t>(short_message.size()));
+    for (char c : short_message) body.push_back(static_cast<uint8_t>(c));
+
+    uint32_t total = 16 + static_cast<uint32_t>(body.size());
+    std::vector<uint8_t> pdu(total);
+    write_u32(pdu.data(),      total);
+    write_u32(pdu.data() + 4,  DELIVER_SM);
+    write_u32(pdu.data() + 8,  ESME_ROK);
+    write_u32(pdu.data() + 12, sequence_number);
+    std::memcpy(pdu.data() + 16, body.data(), body.size());
     return pdu;
 }
 

@@ -18,6 +18,8 @@ private:
         return {"test-uuid", "127.0.0.1", "test-client", "BOUND_TX", 0ULL};
     }
     void Disconnect(const std::string&) override {}
+    uint32_t DeliverSm(const std::string&, const std::string&,
+                       const std::string&) override { return 1u; }
 };
 
 class IClientHandlerDbusTest : public ::testing::Test {
@@ -63,5 +65,6 @@ TEST_F(IClientHandlerDbusTest, AllMethodsAndSignalsVisible) {
     };
     EXPECT_TRUE(check("GetSessionInfo"));
     EXPECT_TRUE(check("Disconnect"));
+    EXPECT_TRUE(check("DeliverSm"));
     EXPECT_TRUE(check("SessionExited"));
 }

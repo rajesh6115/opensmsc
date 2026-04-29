@@ -114,6 +114,8 @@ void SmppSession::dispatch(const smpp::Header& hdr, const std::vector<uint8_t>& 
             handle_submit_sm(hdr, body); break;
         case smpp::ENQUIRE_LINK_RESP:
             handle_enquire_link_resp(hdr); break;
+        case smpp::DELIVER_SM_RESP:
+            handle_deliver_sm_resp(hdr); break;
         default:
             send_pdu(smpp::make_response(smpp::GENERIC_NACK,
                 smpp::ESME_RINVCMDID, hdr.sequence_number));
@@ -241,6 +243,38 @@ void SmppSession::update_session_details()
     } catch (const std::exception& e) {
         spdlog::warn("[SmppSession] UpdateSessionDetails: {}", e.what());
     }
+}
+
+uint32_t SmppSession::DeliverSm(const std::string& src_addr,
+                                const std::string& dst_addr,
+                                const std::string& short_message)
+{
+    {
+        std::lock_guard<std::mutex> lk(state_mutex_);
+        if (state_ != SessionState::BOUND_RX && state_ != SessionState::BOUND_TRX) {
+            throw sdbus::Error("com.telecom.smpp.Error.InvalidBindState",
+                               "session is not BOUND_RX or BOUND_TRX");
+        }
+    }
+    uint32_t seq = next_deliver_seq();
+    send_pdu(smpp::make_deliver_sm(seq, src_addr, dst_addr, short_message));
+    spdlog::info("[SmppSession] deliver_sm seq={} src={} dst={} uuid={}",
+                 seq, src_addr, dst_addr, uuid_);
+    return seq;
+}
+
+void SmppSession::handle_deliver_sm_resp(const smpp::Header& hdr)
+{
+    spdlog::debug("[SmppSession] deliver_sm_resp seq={} status={:#010x} uuid={}",
+                  hdr.sequence_number, hdr.command_status, uuid_);
+    if (hdr.command_status != smpp::ESME_ROK)
+        spdlog::warn("[SmppSession] deliver_sm_resp error status={:#010x} seq={} uuid={}",
+                     hdr.command_status, hdr.sequence_number, uuid_);
+}
+
+uint32_t SmppSession::next_deliver_seq()
+{
+    return deliver_seq_.fetch_add(1, std::memory_order_relaxed);
 }
 
 // ── Enquire-link keepalive ────────────────────────────────────────────────────

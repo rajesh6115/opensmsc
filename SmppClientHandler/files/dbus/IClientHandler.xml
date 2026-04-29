@@ -15,9 +15,18 @@
       <arg name="bind_time"  type="t" direction="out"/>
     </method>
 
-    <!-- Terminates the session cleanly: sends UNBIND_REQ, waits for resp, closes socket. -->
+    <!-- Terminates the session cleanly. -->
     <method name="Disconnect">
       <arg name="reason" type="s" direction="in"/>
+    </method>
+
+    <!-- Deliver an MO message to a BOUND_RX or BOUND_TRX session.
+         Returns the sequence number used in the deliver_sm PDU. -->
+    <method name="DeliverSm">
+      <arg name="src_addr"      type="s" direction="in"/>
+      <arg name="dst_addr"      type="s" direction="in"/>
+      <arg name="short_message" type="s" direction="in"/>
+      <arg name="sequence_num"  type="u" direction="out"/>
     </method>
 
     <!-- Emitted on both clean shutdown and error termination before process exits. -->

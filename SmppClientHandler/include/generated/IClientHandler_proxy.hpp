@@ -48,6 +48,13 @@ public:
         proxy_->callMethod("Disconnect").onInterface(INTERFACE_NAME).withArguments(reason);
     }
 
+    uint32_t DeliverSm(const std::string& src_addr, const std::string& dst_addr, const std::string& short_message)
+    {
+        uint32_t result;
+        proxy_->callMethod("DeliverSm").onInterface(INTERFACE_NAME).withArguments(src_addr, dst_addr, short_message).storeResultsTo(result);
+        return result;
+    }
+
 private:
     sdbus::IProxy* proxy_;
 };

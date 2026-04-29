@@ -47,6 +47,9 @@ private:
     std::tuple<std::string,std::string,std::string,std::string,uint64_t>
         GetSessionInfo() override;
     void Disconnect(const std::string& reason) override;
+    uint32_t DeliverSm(const std::string& src_addr,
+                       const std::string& dst_addr,
+                       const std::string& short_message) override;
 
     void read_header();
     void on_header(const asio::error_code& ec, std::size_t);
@@ -59,7 +62,9 @@ private:
     void handle_unbind(const smpp::Header& hdr);
     void handle_enquire_link(const smpp::Header& hdr);
     void handle_submit_sm(const smpp::Header& hdr, const std::vector<uint8_t>& body);
+    void handle_deliver_sm_resp(const smpp::Header& hdr);
     std::string next_message_id();
+    uint32_t    next_deliver_seq();
 
     void send_pdu(std::vector<uint8_t> pdu);
     void do_disconnect(const std::string& reason);
@@ -94,6 +99,7 @@ private:
     asio::steady_timer                   el_timeout_timer_;
 
     std::atomic<uint32_t>                msg_seq_{0};
+    std::atomic<uint32_t>                deliver_seq_{0x20000000u};
     std::string                          msg_id_prefix_;  // first 8 chars of uuid
     std::vector<uint8_t>                 header_buf_;
 };

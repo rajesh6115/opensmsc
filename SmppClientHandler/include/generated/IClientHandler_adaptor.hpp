@@ -25,6 +25,7 @@ protected:
     {
         object_->registerMethod("GetSessionInfo").onInterface(INTERFACE_NAME).withOutputParamNames("session_id", "client_ip", "system_id", "state", "bind_time").implementedAs([this](){ return this->GetSessionInfo(); });
         object_->registerMethod("Disconnect").onInterface(INTERFACE_NAME).withInputParamNames("reason").implementedAs([this](const std::string& reason){ return this->Disconnect(reason); });
+        object_->registerMethod("DeliverSm").onInterface(INTERFACE_NAME).withInputParamNames("src_addr", "dst_addr", "short_message").withOutputParamNames("sequence_num").implementedAs([this](const std::string& src_addr, const std::string& dst_addr, const std::string& short_message){ return this->DeliverSm(src_addr, dst_addr, short_message); });
         object_->registerSignal("SessionExited").onInterface(INTERFACE_NAME).withParameters<std::string, std::string>("session_id", "reason");
     }
 
@@ -44,6 +45,7 @@ public:
 private:
     virtual std::tuple<std::string, std::string, std::string, std::string, uint64_t> GetSessionInfo() = 0;
     virtual void Disconnect(const std::string& reason) = 0;
+    virtual uint32_t DeliverSm(const std::string& src_addr, const std::string& dst_addr, const std::string& short_message) = 0;
 
 private:
     sdbus::IObject* object_;
