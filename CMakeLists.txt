@@ -14,6 +14,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 # Build configuration
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Aggregate subdirectory tests under top-level ctest
+enable_testing()
+
 # ── Find ASIO (standalone header-only) ────────────────────────────────────
 find_path(ASIO_INCLUDE_DIR asio.hpp
     HINTS /usr/include /usr/local/include

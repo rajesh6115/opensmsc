@@ -111,6 +111,11 @@ RUN ssh-keygen -A
 # Initialize D-Bus system bus
 RUN dbus-uuidgen --ensure
 
+# Session bus address (session daemon started by supervisord's dbus-session
+# program) - exported globally so `docker exec` shells and test binaries pick
+# it up without manual dbus-launch/export steps.
+ENV DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/session_bus_socket
+
 # Copy D-Bus system configuration
 COPY Docker/smsc-dev/system.conf /etc/dbus-1/system.conf
 RUN chmod 644 /etc/dbus-1/system.conf
